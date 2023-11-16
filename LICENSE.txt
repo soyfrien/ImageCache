@@ -1,6 +1,71 @@
-MIT License
+Ppdac.ImageCache.Maui License v1.0 November 13, 2023
+Copyright (c) Louis A. Waweru; PPDAC, Ltd.
 
-Copyright (c) [year] [fullname]
+Ppdac.ImageCache.Maui License v1.0 November 13, 2023
+============================================
+
+Summary:
+1. You may license this software Commercially or Open Source at your own choice.
+2. You are actively encouraged to report bugs and contribute to this repository.
+3. Contributors have a voice, but are not the project or software owners.
+
+PPDAC Contribution Agreement
+============================================
+This PPDAC LTD (aka “PPDAC” or “Louis Waweru” or "Tokibits") project and everyone participating in it is governed by the following Contribution Agreement which may evolve over time.
+By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to oss@ppdac.ltd.
+
+Contributions Are Appreciated and Welcome
+--------------------------------------------
+* If you are skilled enough to improve this library please share:
+   - Please make a pull request to: https://github.com/ppdac/Ppdac.ImageCache.Maui/pulls
+* Contributions to this repository, any Fork, or copy remains with PPDAC LTD under the MIT license terms.
+* You may add a note to any significant code contributions you have made, but may not copyright or patent your changes.
+    * You may not modify licensing or copyright of any part or any derivative work (including a fork) of this software in any way without formal written consent.
+
+Bugs and Issues
+--------------------------------------------
+* Commercial Licensing users are entitled to support and SLA as purchased.
+* Check the issue log in case your issue is already documented.
+  * Make a Pull Request if you are technically capable.
+  * To make a Pull Request: https://github.com/ppdac/Ppdac.ImageCache.Maui/pulls
+* To post an issue: https://github.com/ppdac/Ppdac.ImageCache.Maui/issues
+
+License Awareness
+--------------------------------------------
+This license adapted from IronSoftware.Drawing Split License Version 1.0 Sep 2022.
+Obey copyright and patents. The software industry revolves on trust.
+You should be aware of the license of all required or optional Nuget dependencies including .NET libraries published on nuget.org or elsewhere including:
+    * Microsoft.Maui.Graphics under MIT licensing (like this is).
+    * Microsoft.Maui.Controls under MIT licensing.
+
+Permissive Split Licensing
+--------------------------------------------
+Works in Source or Object form are split licensed and may be licensed your choice of either:
+1. PPDAC Software Commercial Licensing documented below
+2. MIT Open Source License included in this document
+
+PPDAC Commercial Licensing
+============================================
+You may choose Commercial Licensing for this software and / or its derived works by purchasing “PPDAC .NET” at https://ppdac.ltd/license/
+
+Summary of Commercial Licensing Benefits:
+--------------------------------------------
+It is often worth paying for something that is free:
+* Developer support is available to Commercial Licensing customers when purchased and agreed by both parties.
+* Purchasing gives you the option to replace the MIT Open Source license below with Commercial Licensing
+    *  Commercial Licensing Terms are found at: https://github.com/ppdac/Ppdac.ImageCache.Maui/blob/master/NuGet/EULA.txt and within this software.
+    *  The MIT public license agreement no longer applies and the MIT license below need not be shipped inside or alongside your software
+* Enhanced versions of Ppdac.ImageCache.Maui with additional features may be released and available to Commercial Licensing users.
+    * This may include:
+        * Additional features and documentation
+
+Open Source Licensing
+============================================
+If Commercial Licensing is not purchased, then Open Source Licensing applies. 
+The MIT License that immediately follows, should be included inside your product or project as clearly as possible.
+
+The MIT License (MIT)
+Copyright (c) 2023 Louis Waweru (PPDAC LTD)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
