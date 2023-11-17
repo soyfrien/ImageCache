@@ -108,27 +108,31 @@ public static class ImageCache
 	private static void Keep(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
-		
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
+		lock (s_sha256)
+		{
 
-		ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-		Guid filename = new(filenameSeed);
 
-		byte[] bytes = GetImageAsBytes(uri)!;
+			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 
-		//ReadOnlySpan<byte> filenameSeed = new(bytes[..15]);
+			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
+			Guid filename = new(filenameSeed);
 
-		//Guid pathToCachedFile = new Guid(filenameSeed);
-		using FileStream fs = new($"{_ImageCachePath}\\{filename}", FileMode.OpenOrCreate);
-		using BinaryWriter bw = new(fs);	
-		bw.Write(bytes);
-		fs.Flush();
-		bw.Flush();
-		fs.Close();
-		bw.Close();
-		fs.Dispose();
-		bw.Dispose();
-		s_cachedUris.Add(uri.AbsoluteUri);
+			byte[] bytes = GetImageAsBytes(uri)!;
+
+			//ReadOnlySpan<byte> filenameSeed = new(bytes[..15]);
+
+			//Guid pathToCachedFile = new Guid(filenameSeed);
+			using FileStream fs = new($"{_ImageCachePath}\\{filename}", FileMode.OpenOrCreate);
+			using BinaryWriter bw = new(fs);
+			bw.Write(bytes);
+			fs.Flush();
+			bw.Flush();
+			fs.Close();
+			bw.Close();
+			fs.Dispose();
+			bw.Dispose();
+			s_cachedUris.Add(uri.AbsoluteUri);
+		}
 	}
 
 	private static byte[] GetAsBytes(Uri uri)
@@ -561,7 +565,7 @@ public static class ImageCache
 		if (s_cachedUris.Count == 0)
 			return Task.FromResult($"{_ImageCachePath} was empty.");
 
-		return Task.FromResult($"{s_cachedUris.Count} items discovered.");
+		return Task.FromResult($"{s_cachedUris.Count} items in cache.");
 	}
 
 
