@@ -7,7 +7,7 @@ using Microsoft.Maui.Graphics.Platform;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Ppdac.ImageCache.Maui;
+namespace Ppdac.ImageCached.Maui;
 
 /// <summary>
 /// Use this class to cache images from the Internet. Where ever you would give a control a URL, a stream, or byte[],
@@ -32,9 +32,9 @@ namespace Ppdac.ImageCache.Maui;
 /// </code>
 /// </summary>
 /// <permission cref="ImageCache">This class is public.</permission>
-public static class ImageCache
+public static class ImageCacher
 {
-	private static string _ImageCachePath =$"{FileSystem.Current.CacheDirectory}\\Images";
+	private static string _ImageCachePath = $"{FileSystem.Current.CacheDirectory}\\Images";
 	private const string _CacheFile = "ppdac.imagecache.data";
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
 	//private static readonly Dictionary<string, byte[]> s_imageStore = [];
@@ -88,7 +88,7 @@ public static class ImageCache
 		//	s_imageStore.Add(uri.AbsoluteUri, GetImageAsBytes(uri)!);
 
 		if (s_cachedUris.Contains(uri.AbsoluteUri) is false)
-			Keep(uri);	
+			Keep(uri);
 	}
 
 	public static void Store(Uri uri)
@@ -148,7 +148,7 @@ public static class ImageCache
 		return bytes;
 	}
 
-	private static Stream GetAsStream(Uri uri)
+	public static Stream GetImageAsStream(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)
@@ -177,7 +177,7 @@ public static class ImageCache
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)
-		{ 
+		{
 			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
@@ -187,6 +187,32 @@ public static class ImageCache
 		}
 	}
 
+
+	/// <summary>
+	/// Gets image from URI and returns it as an <see cref="ImageSource"/>.
+	/// </summary>
+	/// <param name="uri">URI of image to cache.</param>
+	/// <returns>The image is returned as an <see cref="ImageSource"/>.</returns>
+	public static ImageSource GetAsImageSource(Uri uri)
+	{
+		if (string.IsNullOrEmpty(uri.AbsoluteUri))
+			return null;
+
+		using HttpClient httpClient = new();
+		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
+		if (responseMessage.IsSuccessStatusCode is false)
+			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
+
+		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
+#if WINDOWS
+		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(stream);
+#elif IOS || ANDROID || MACCATALYST
+		Microsoft.Maui.Graphics.IImage img = PlatformImage.FromStream(stream);
+#endif
+		byte[] bytes = img.AsBytes();
+
+		return ImageSource.FromStream(() => new MemoryStream(bytes));
+	}
 
 
 	/// <summary>
@@ -380,6 +406,18 @@ public static class ImageCache
 	//	}
 	//}
 
+	public static Stream AsStream(Uri uri)
+	{
+		string pathToCachedFile = $"{_ImageCachePath}\\{GetFilename(uri)}";
+		if (!s_cachedUris.Contains(pathToCachedFile))
+		{
+			Keep(uri);
+			return new MemoryStream(GetImageAsBytes(uri)!);
+		}
+		else
+			return new MemoryStream(GetFromStorageAsBytes(uri)!);
+	}
+
 	/// <summary>
 	/// Looks for a key equal to the string and returns a stream of byte[], which can be used to set an ImageSource
 	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage.
@@ -399,7 +437,7 @@ public static class ImageCache
 	/// </summary>
 	/// <param name="url">The URL is both the key and the location of the image on the Internet.</param>
 	/// <returns>The byte array of the image if found, or null.</returns>
-	private static byte[]? GetImageAsBytes(string url)
+	public static byte[]? GetImageAsBytes(string url)
 	{
 		if (string.IsNullOrEmpty(url))
 			return null;
@@ -537,7 +575,7 @@ public static class ImageCache
 	/// <returns>A string as TResult.</returns>
 	public static Task<string> Restore()
 	{
-		//string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_CacheFile}";
+		//string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_ContiguousCacheFile}";
 
 		//if (File.Exists(cachePath) is false)
 		//	
@@ -585,5 +623,16 @@ public static class ImageCache
 		}
 		else
 			return Task.FromResult($"Image cache not found at {cachePath}.");
+	}
+
+
+	/// <summary>
+	/// Clears the Dictionary.
+	/// </summary>
+	public static Task FreeMemory()
+	{
+		 s_cachedUris.Clear();
+
+		return Task.CompletedTask;
 	}
 }
