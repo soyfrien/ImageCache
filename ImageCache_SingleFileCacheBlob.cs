@@ -1,6 +1,7 @@
 ﻿#if WINDOWS
 using Microsoft.Maui.Graphics.Win2D;
 #elif ANDROID || IOS || MACCATALYST
+using BenchmarkDotNet.Attributes;
 using Microsoft.Maui.Graphics.Platform;
 #endif
 
@@ -14,19 +15,19 @@ namespace Ppdac.Cache;
 
 /// <summary>
 /// Use this class to cache images from the Internet. Where ever you would give a control a URL, a stream, or byte[],
-/// do that as normal, but have ImageCache sit in the middle. For example, in .NET MAUI:
+/// do that as normal, but have ImageCache_SingleFileCacheBlob sit in the middle. For example, in .NET MAUI:
 /// <code>
 /// // MauiProgram.cs:
 /// ...
-/// builder.Services.AddSingleton‹ImageCache›();
+/// builder.Services.AddSingleton‹ImageCache_SingleFileCacheBlob›();
 /// ...
 /// </code>
 /// Then use Dependency Injection to gain access to the class of a view, viewmodel, page or control:
 /// <code>
-/// Using Ppdac.ImageCache.Maui;
-/// ImageCache _imageCache;
+/// Using Ppdac.ImageCache_SingleFileCacheBlob.Maui;
+/// ImageCache_SingleFileCacheBlob _imageCache;
 /// ...
-/// Page(ViewModel viewModel, ImageCache imageCache)
+/// Page(ViewModel viewModel, ImageCache_SingleFileCacheBlob imageCache)
 /// {
 ///		...
 ///		_imageCache = imageCache;
@@ -34,18 +35,18 @@ namespace Ppdac.Cache;
 ///		...
 /// </code>
 /// </summary>
-/// <permission cref="ImageCache">This class is public.</permission>
-public class ImageCache
+/// <permission cref="ImageCache_SingleFileCacheBlob">This class is public.</permission>
+public class ImageCache_SingleFileCacheBlob
 {
 	/// <summary>
 	/// This is the path to the folder where the _ContiguousCacheFile is stored.
 	/// </summary>
-	private static string? _ImageCachePath;// = $"{FileSystem.Current.CacheDirectory}\\ppdac";
+	private static string? _ImageCachePath = $"{FileSystem.Current.CacheDirectory}\\ppdac";
 
 	/// <summary>
 	/// This is the name of the file that is saved to the filesystem.
 	/// </summary>
-	private static string? _ContiguousCacheFile;// = "ppdac.imagecache.data";
+	private static string? _ContiguousCacheFile = "ppdac.imagecache.data";
 
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
 	private static readonly Dictionary<string, byte[]> s_imageStore = [];
@@ -58,7 +59,7 @@ public class ImageCache
 	/// _ContiguousCacheFile = "ppdac.imagecache.data";
 	/// </code>
 	/// </summary>
-	public ImageCache()
+	public ImageCache_SingleFileCacheBlob()
 	{
 		_ImageCachePath = $"{FileSystem.Current.CacheDirectory}\\Image";
 		_ContiguousCacheFile = "ppdac.imagecache.data";
@@ -70,7 +71,7 @@ public class ImageCache
 	/// </summary>
 	/// <param name="imageCachePath">Path of folder to save the cache file in.</param>
 	/// <param name="cacheFile">Filename for the cache data file.</param>
-	public ImageCache(string imageCachePath, string cacheFile = "ppdac.imagecache.data") : this()
+	public ImageCache_SingleFileCacheBlob(string imageCachePath, string cacheFile = "ppdac.imagecache.data") : this()
 	{
 
 		if (string.IsNullOrEmpty(imageCachePath) is false)
@@ -88,15 +89,15 @@ public class ImageCache
 	/// </summary>
 	/// <param name="uri">URI of image to cache.</param>
 	/// <returns>The image is returned as an <see cref="ImageSource"/>.</returns>
-	public static ImageSource GetAsImageSource(Uri uri)
+	public virtual ImageSource GetAsImageSource(Uri uri)
 	{
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
-			return null;
+			ArgumentException.ThrowIfNullOrEmpty(uri.AbsoluteUri, nameof(uri));
 
 		using HttpClient httpClient = new();
 		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
 		if (responseMessage.IsSuccessStatusCode is false)
-			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
+			throw new HttpRequestException($"Failed to get image from {uri.AbsoluteUri}.");
 
 		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
 #if WINDOWS
@@ -119,7 +120,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static Func<Stream> GetImageAsFuncStream(Uri uri)
+	public virtual Func<Stream> GetImageAsFuncStream(Uri uri)
 	{
 		if (s_imageStore.ContainsKey(uri.AbsoluteUri))//TryGetValue(uri.AbsoluteUri, out byte[]? value))
 			return () => new MemoryStream(GetImageAsBytes(uri));//(value);
@@ -155,7 +156,7 @@ public class ImageCache
 	/// <summary>
 	/// Alias for <see cref="GetImageAsFuncStream(Uri)"/>.
 	/// </summary>
-	public static Func<Stream> AsFuncStream(Uri uri) => GetImageAsFuncStream(uri);
+	public virtual Func<Stream> AsFuncStream(Uri uri) => GetImageAsFuncStream(uri);
 
 
 	/// <summary>
@@ -179,7 +180,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static void Add(Uri uri)
+	public virtual void Add(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)
@@ -202,7 +203,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static byte[]? GetImageAsBytes(string url)
+	public virtual byte[]? GetImageAsBytes(string url)
 	{
 		if (string.IsNullOrEmpty(url))
 			return null;
@@ -233,7 +234,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static byte[] GetImageAsBytes(Uri uri)
+	public virtual byte[] GetImageAsBytes(Uri uri)
 	{
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
 			return null;
@@ -259,7 +260,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static int GetNumberOfBytes(Uri uri)
+	public virtual int GetNumberOfBytes(Uri uri)
 	{
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
 			return -1;
@@ -303,7 +304,7 @@ public class ImageCache
 
 
 	/// <inheritdoc/>
-	public static Stream GetImageAsStream(Uri uri)
+	public virtual Stream GetImageAsStream(Uri uri)
 	{
 		lock (s_sha256)
 		{
@@ -347,16 +348,18 @@ public class ImageCache
 	}
 
 
-	
+
 	/// <summary>
 	/// Restores the cache from the filesystem, 
-	/// after using Dependency Injection to access the ImageCache, for example.
+	/// after using Dependency Injection to access the ImageCache_SingleFileCacheBlob, for example.
 	/// </summary>
 	/// <code>StatusLabel.Text = _imageStore.Restore().Result;</code>
 	/// <returns>A string as TResult.</returns>
 	public static Task<string> Restore()
 	{
-		string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_ContiguousCacheFile}";
+		string cachePath = $"{FileSystem.Current.CacheDirectory}";
+		cachePath += $"\\{_ContiguousCacheFile}";
+
 
 		if (File.Exists(cachePath) is false)
 			return Task.FromResult($"{cachePath} does not exist.");

@@ -1,4 +1,5 @@
 ﻿#if WINDOWS
+using Microsoft.Extensions.Options;
 using Microsoft.Maui.Graphics.Win2D;
 #elif IOS || ANDROID || MACCATALYST
 using Microsoft.Maui.Graphics.Platform;
@@ -7,23 +8,23 @@ using Microsoft.Maui.Graphics.Platform;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Ppdac.ImageCached.Maui;
+namespace Ppdac.Cache2;
 
 /// <summary>
 /// Use this class to cache images from the Internet. Where ever you would give a control a URL, a stream, or byte[],
-/// do that as normal, but have ImageCache sit in the middle. For example, in .NET MAUI:
+/// do that as normal, but have ImageCache_SingleFileCacheBlob sit in the middle. For example, in .NET MAUI:
 /// <code>
 /// // MauiProgram.cs:
 /// ...
-/// builder.Services.AddSingleton‹ImageCache›();
+/// builder.Services.AddSingleton‹ImageCache_SingleFileCacheBlob›();
 /// ...
 /// </code>
 /// Then use Dependency Injection to gain access to the class of a view, viewmodel, page or control:
 /// <code>
-/// Using Ppdac.ImageCache.Maui;
-/// ImageCache _imageCache;
+/// Using Ppdac.ImageCache_SingleFileCacheBlob.Maui;
+/// ImageCache_SingleFileCacheBlob _imageCache;
 /// ...
-/// Page(ViewModel viewModel, ImageCache imageCache)
+/// Page(ViewModel viewModel, ImageCache_SingleFileCacheBlob imageCache)
 /// {
 ///		...
 ///		_imageCache = imageCache;
@@ -32,18 +33,19 @@ namespace Ppdac.ImageCached.Maui;
 /// </code>
 /// </summary>
 /// <permission cref="ImageCache">This class is public.</permission>
-public static class ImageCacher
+public static class ImageCache_MultiFileCache_Static
 {
-	private static string _ImageCachePath = $"{FileSystem.Current.CacheDirectory}\\Images";
-	private const string _CacheFile = "ppdac.imagecache.data";
+	public static string ImageCachePath = $"{FileSystem.Current.CacheDirectory}\\ppdac";
+	public static string CacheFile = "ppdac.imagecache.dat";
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
 	//private static readonly Dictionary<string, byte[]> s_imageStore = [];
 	private static readonly List<string> s_cachedUris = [];
 
+
 	/// <summary>
 	/// Gets the number of items in the cache.
 	/// </summary>
-	//public static int Count => s_imageStore.Count;
+	public static int Count => s_cachedUris.Count;//s_imageStore.Count;
 
 	/// <summary>
 	/// Gets the keys of the cache.
@@ -110,8 +112,6 @@ public static class ImageCacher
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)
 		{
-
-
 			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
@@ -122,7 +122,7 @@ public static class ImageCacher
 			//ReadOnlySpan<byte> filenameSeed = new(bytes[..15]);
 
 			//Guid pathToCachedFile = new Guid(filenameSeed);
-			using FileStream fs = new($"{_ImageCachePath}\\{filename}", FileMode.OpenOrCreate);
+			using FileStream fs = new($"{ImageCachePath}\\{filename}", FileMode.OpenOrCreate);
 			using BinaryWriter bw = new(fs);
 			bw.Write(bytes);
 			fs.Flush();
@@ -139,7 +139,7 @@ public static class ImageCacher
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 
-		string filePath = $"{_ImageCachePath}\\{GetFilename(uri)}";
+		string filePath = $"{ImageCachePath}\\{GetFilename(uri)}";
 		using FileStream fs = new(filePath, FileMode.Open);
 		using BinaryReader br = new(fs);
 		int length = br.ReadInt32();
@@ -158,18 +158,24 @@ public static class ImageCacher
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
 			Guid filename = new(filenameSeed);
 
-			string filePath = $"{_ImageCachePath}\\{filename}";
-			using FileStream fs = new(filePath, FileMode.Open);
-			using BinaryReader br = new(fs);
-			int length = br.ReadInt32();
-			byte[] bytes = br.ReadBytes(length);
-			fs.Flush();
-			fs.Close();
-			br.Close();
-			fs.Dispose();
-			br.Dispose();
+			string filePath = $"{ImageCachePath}\\{filename}";
 
-			return new MemoryStream(bytes);
+			if (File.Exists(filePath) is false)
+				Keep(uri);
+
+			return new MemoryStream(File.ReadAllBytes(filePath));
+
+			//using FileStream fs = new(filePath, FileMode.Open);
+			//using BinaryReader br = new(fs);
+			//int length = br.ReadInt32();
+			//byte[] bytes = br.ReadBytes(length);
+			//fs.Flush();
+			//fs.Close();
+			//br.Close();
+			//fs.Dispose();
+			//br.Dispose();
+
+			//return new MemoryStream(bytes);
 		}
 	}
 
@@ -198,20 +204,35 @@ public static class ImageCacher
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
 			return null;
 
-		using HttpClient httpClient = new();
-		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
-		if (responseMessage.IsSuccessStatusCode is false)
-			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
 
-		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
-#if WINDOWS
-		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(stream);
-#elif IOS || ANDROID || MACCATALYST
-		Microsoft.Maui.Graphics.IImage img = PlatformImage.FromStream(stream);
-#endif
-		byte[] bytes = img.AsBytes();
+		lock (s_sha256)
+		{
+			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 
-		return ImageSource.FromStream(() => new MemoryStream(bytes));
+			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
+			Guid filename = new(filenameSeed);
+
+			string filePath = $"{ImageCachePath}\\{filename}";
+
+			if (File.Exists(filePath) is false || s_cachedUris.Contains(uri.AbsoluteUri) is false)
+				Keep(uri);
+
+			return ImageSource.FromStream(() => new MemoryStream(File.ReadAllBytes(filePath)));
+		}
+		//			using HttpClient httpClient = new();
+		//		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
+		//		if (responseMessage.IsSuccessStatusCode is false)
+		//			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
+
+		//		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
+		//#if WINDOWS
+		//		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(stream);
+		//#elif IOS || ANDROID || MACCATALYST
+		//		Microsoft.Maui.Graphics.IImage img = PlatformImage.FromStream(stream);
+		//#endif
+		//		byte[] bytes = img.AsBytes();
+
+		//		return ImageSource.FromStream(() => new MemoryStream(bytes));
 	}
 
 
@@ -236,13 +257,13 @@ public static class ImageCacher
 	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage,
 	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
 	/// <code>Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
 	/// </code>
 	/// </summary>
 	/// <example>
 	/// Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// 
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
 	/// </example>
@@ -264,13 +285,13 @@ public static class ImageCacher
 	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage,
 	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
 	/// <code>Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
 	/// </code>
 	/// </summary>
 	/// <example>
 	/// Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// 
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
 	/// </example>
@@ -288,7 +309,7 @@ public static class ImageCacher
 		//	return () => new MemoryStream(s_imageStore[uri.AbsoluteUri]);
 		//}
 
-		string pathToCachedFile = $"{_ImageCachePath}\\{GetFilename(uri)}";
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 		if (!s_cachedUris.Contains(pathToCachedFile))
 		{
 			s_cachedUris.Add(pathToCachedFile);
@@ -303,13 +324,13 @@ public static class ImageCacher
 	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage,
 	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
 	/// <code>Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
 	/// </code>
 	/// </summary>
 	/// <example>
 	/// Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
+	/// ImageCache_SingleFileCacheBlob _imageCache = new ImageCache_SingleFileCacheBlob();
 	/// 
 	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
 	/// </example>
@@ -326,7 +347,7 @@ public static class ImageCacher
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
 			Guid filename = new(filenameSeed);
 
-			string pathToCachedFile = $"{_ImageCachePath}\\{filename}";
+			string pathToCachedFile = $"{ImageCachePath}\\{filename}";
 			if (!s_cachedUris.Contains(pathToCachedFile))
 			{
 				s_cachedUris.Add(pathToCachedFile);
@@ -348,7 +369,7 @@ public static class ImageCacher
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
 			Guid filename = new(filenameSeed);
 
-			string filePath = $"{_ImageCachePath}\\{filename}";
+			string filePath = $"{ImageCachePath}\\{filename}";
 			//		using FileStream fs = new(filePath, FileMode.Open);
 			//#if WINDOWS
 			//		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(fs);
@@ -408,7 +429,7 @@ public static class ImageCacher
 
 	public static Stream AsStream(Uri uri)
 	{
-		string pathToCachedFile = $"{_ImageCachePath}\\{GetFilename(uri)}";
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 		if (!s_cachedUris.Contains(pathToCachedFile))
 		{
 			Keep(uri);
@@ -442,8 +463,13 @@ public static class ImageCacher
 		if (string.IsNullOrEmpty(url))
 			return null;
 
+		Uri uri = new Uri(url);
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+		if (File.Exists(pathToCachedFile))
+			return File.ReadAllBytes(pathToCachedFile);
+
 		using HttpClient httpClient = new();
-		HttpResponseMessage responseMessage = httpClient.GetAsync(new Uri(url)).Result;
+		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
 		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
 #if WINDOWS
 		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(stream);
@@ -470,6 +496,11 @@ public static class ImageCacher
 	{
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
 			return null;
+
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+		if (File.Exists(pathToCachedFile))
+			return File.ReadAllBytes(pathToCachedFile);
+
 
 		using HttpClient httpClient = new();
 		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
@@ -530,7 +561,7 @@ public static class ImageCacher
 		//	return s_imageStore[uri.AbsoluteUri].Length;
 		//}
 
-		string pathToCachedFile = $"{_ImageCachePath}\\{GetFilename(uri)}";
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 		if (!s_cachedUris.Contains(pathToCachedFile))
 		{
 			s_cachedUris.Add(pathToCachedFile);
@@ -541,6 +572,8 @@ public static class ImageCacher
 	}
 
 
+
+	[Obsolete("Files are now saved automatically. You should still use Restore().")]
 	/// <summary>
 	/// Saves the cache to the filesystem.
 	/// </summary>
@@ -548,8 +581,6 @@ public static class ImageCacher
 	/// <returns>A result string from a TResult. </returns>
 	public static Task<string> Save()
 	{
-		string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_CacheFile}";
-
 		//using FileStream fs = new(cachePath, FileMode.OpenOrCreate);
 		//using BinaryWriter bw = new(fs);
 		//bw.Write(s_imageStore.Count);
@@ -563,13 +594,13 @@ public static class ImageCacher
 		//fs.Dispose();
 		//bw.Close();
 		//bw.Dispose();
-		return Task.FromResult($"Image cache saved to {cachePath}.");
+		return Task.FromResult($"This method no longer does anything, as files are now saved automatically. You should still use Restore().");
 	}
 
 
 	/// <summary>
 	/// Restores the cache from the filesystem, 
-	/// after using Dependency Injection to access the ImageCache, for example.
+	/// after using Dependency Injection to access the ImageCache_SingleFileCacheBlob, for example.
 	/// </summary>
 	/// <code>StatusLabel.Text = _imageStore.Restore().Result;</code>
 	/// <returns>A string as TResult.</returns>
@@ -593,15 +624,15 @@ public static class ImageCacher
 		//}
 		//return Task.FromResult($"Image cache restored from {cachePath}.");
 
-		if (!Directory.Exists(_ImageCachePath))
-			Directory.CreateDirectory(_ImageCachePath);
+		if (!Directory.Exists(ImageCachePath))
+			Directory.CreateDirectory(ImageCachePath);
 
 		if (s_cachedUris.Count == 0)
-			foreach (string file in Directory.GetFiles(_ImageCachePath).ToList())
+			foreach (string file in Directory.GetFiles(ImageCachePath).ToList())
 				s_cachedUris.Add(file);
 
 		if (s_cachedUris.Count == 0)
-			return Task.FromResult($"{_ImageCachePath} was empty.");
+			return Task.FromResult($"{ImageCachePath} was empty.");
 
 		return Task.FromResult($"{s_cachedUris.Count} items in cache.");
 	}
@@ -614,15 +645,28 @@ public static class ImageCacher
 	/// <returns>A string from a TResult.</returns>
 	public static Task<string> Purge()
 	{
-		string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_CacheFile}";
 
-		if (File.Exists(cachePath))
-		{
-			File.Delete(cachePath);
-			return Task.FromResult($"Deleted cache at {cachePath}.");
-		}
-		else
-			return Task.FromResult($"Image cache not found at {cachePath}.");
+		if (Directory.Exists(ImageCachePath) is false)
+			return Task.FromResult($"{ImageCachePath} wasn't there.");
+
+
+		if (Directory.GetFiles(ImageCachePath).ToList().Count > 0)
+			foreach (string file in Directory.GetFiles(ImageCachePath).ToList())
+				File.Delete(file);
+	
+		Directory.Delete($"{ImageCachePath}");
+
+		return Task.FromResult($"Image cache purged from {ImageCachePath}.");
+
+		//string cachePath = $"{ImageCachePath}\\{CacheFile}";
+
+		//if (File.Exists(cachePath))
+		//{
+		//	File.Delete(cachePath);
+		//	return Task.FromResult($"Deleted cache at {cachePath}.");
+		//}
+		//else
+		//	return Task.FromResult($"Image cache not found at {cachePath}.");
 	}
 
 
@@ -631,7 +675,7 @@ public static class ImageCacher
 	/// </summary>
 	public static Task FreeMemory()
 	{
-		 s_cachedUris.Clear();
+		s_cachedUris.Clear();
 
 		return Task.CompletedTask;
 	}
