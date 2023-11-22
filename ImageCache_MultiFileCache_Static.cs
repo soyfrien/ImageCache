@@ -645,20 +645,7 @@ public static class ImageCache_MultiFileCache_Static
 	/// <returns>A string from a TResult.</returns>
 	public static Task<string> Purge()
 	{
-
-		if (Directory.Exists(ImageCachePath) is false)
-			return Task.FromResult($"{ImageCachePath} wasn't there.");
-
-
-		if (Directory.GetFiles(ImageCachePath).ToList().Count > 0)
-			foreach (string file in Directory.GetFiles(ImageCachePath).ToList())
-				File.Delete(file);
-	
-		Directory.Delete($"{ImageCachePath}");
-
-		return Task.FromResult($"Image cache purged from {ImageCachePath}.");
-
-		//string cachePath = $"{ImageCachePath}\\{CacheFile}";
+		string cachePath = $"{FileSystem.Current.CacheDirectory}\\{_CacheFile}";
 
 		//if (File.Exists(cachePath))
 		//{
