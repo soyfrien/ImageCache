@@ -1,14 +1,11 @@
-﻿#if WINDOWS
-using Microsoft.Extensions.Options;
+﻿using System.Security.Cryptography;
+using System.Text;
+#if WINDOWS
 using Microsoft.Maui.Graphics.Win2D;
+using Microsoft.Maui.Storage;
 #elif IOS || ANDROID || MACCATALYST
 using Microsoft.Maui.Graphics.Platform;
 #endif
-
-using System.Buffers;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.Maui.Storage;
 
 namespace Ppdac.Cache;
 
@@ -34,175 +31,42 @@ namespace Ppdac.Cache;
 ///		...
 /// </code>
 /// </summary>
-/// <permission cref="ImageCache">This class is public.</permission>
-public class ImageCacheV3Async
+/// <permission cref="Ppdac.Cache">This class is public.</permission>
+public class ImageCache
 {
-	public static string ImageCachePath = "C:\\Users\\Louis\\source\\repos\\ImageCache.Benchmarks\\bin\\Debug\\Images";//{FileSystem.Current.CacheDirectory}\\ppdac";
-	public static string CacheFile = "ppdac.imagecache.dat";
+	private static string _imageCachePath = $"{FileSystem.Current.CacheDirectory}\\ppdac";
+	private static string _cacheFile = "ppdac.imagecache.dat";
+	public static string ImageCachePath
+	{
+		get => _imageCachePath;
+		set => _imageCachePath = value;
+	}
+	public static string CacheFile
+	{
+		get => _cacheFile;
+		set => _cacheFile = value;
+	}
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
-	//private static readonly Dictionary<string, byte[]> s_imageStore = [];
 	private static readonly List<string> s_cachedUris = [];
 
 
 	/// <summary>
 	/// Gets the number of items in the cache.
 	/// </summary>
-	public static int Count => s_cachedUris.Count;//s_imageStore.Count;
-
-	/// <summary>
-	/// Gets the keys of the cache.
-	/// </summary>
-	//public static List<string> ImageList => s_imageStore.Keys.ToList();
+	public static int Count => s_cachedUris.Count;
 
 
 	/// <summary>
-	/// Adds an image to the store with a URL.
+	/// Using the first sixteen bytes of the  <see cref="Uri"/>, computes the deterministic filename as a <see cref="Guid"/> <see cref="string"/>.
 	/// </summary>
-	/// <remarks>
-	/// It is not neccessary to call this, as whenever an unknown image is requested,
-	/// it is automatically added to the cache.
-	/// </remarks>
-	/// <param name="url">A URL for the image as a string.</param>
-	//public static void Add(string url)
-	//{
-	//	ArgumentException.ThrowIfNullOrEmpty(url);
-
-	//	if (s_imageStore.TryGetValue(key: url, value: out byte[]? value))
-	//		s_imageStore[url] = value;
-	//	else
-	//		_ = s_imageStore.TryAdd(url, value: GetImageAsBytes(url)!);
-	//}
-
-
-	/// <summary>
-	/// Adds an image to the store with a URI.
-	/// </summary>
-	/// <remarks>
-	/// It is not neccessary to call this, as whenever an unknown image is requested,
-	/// it is automatically added to the cache.
-	/// </remarks>
-	/// <param name="uri">A URI whose .AbsoluteUri property is the location of the image.</param>
-	public async Task AddAsync(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-
-		//if (s_imageStore.TryGetValue(key: uri.AbsoluteUri, value: out byte[]? value))
-		//	s_imageStore[uri.AbsoluteUri] = value;
-		//else
-		//	s_imageStore.Add(uri.AbsoluteUri, GetImageAsBytes(uri)!);
-
-		if (s_cachedUris.Contains(uri.AbsoluteUri) is false)
-			await KeepAsync(uri);
-	}
-
-	public async Task Store(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-		if (Directory.Exists(ImageCachePath) is false)
-			Directory.CreateDirectory(ImageCachePath);
-
-		if (s_cachedUris.Contains(uri.AbsoluteUri) is false)
-			await KeepAsync(uri);
-	}
-
-
-	/// <summary>
-	/// Writes the bytes to the filesystem, using a hash of the url as the pathToCachedFile.
-	/// </summary>
-	/// <param name="uri">The URI of the image about to be kept in storage.</param>
-	/// <exception cref="NotImplementedException"></exception>
-	private static async Task KeepAsync(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-		//lock (s_sha256)
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-		//ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-
-		byte[] filenameSeed = new byte[16];
-		Array.Copy(uriHash, filenameSeed, 16);
-		Guid filename = new(filenameSeed);
-		byte[] bytes = await GetAsBytesAsync(uri);
-
-		if (Directory.Exists(ImageCachePath) is false)
-			Directory.CreateDirectory(ImageCachePath);
-
-		await File.WriteAllBytesAsync($"{ImageCachePath}\\{filename}", bytes);
-
-		s_cachedUris.Add(uri.AbsoluteUri);
-	}
-
-
-	private async static Task<byte[]> GetAsBytesAsync(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-
-		if (Directory.Exists(ImageCachePath) is false)
-			Directory.CreateDirectory(ImageCachePath);
-
-		string filePath = $"{ImageCachePath}\\{GetFilename(uri)}";
-
-		byte[] bytes;
-		if (File.Exists(filePath))
-			bytes = await File.ReadAllBytesAsync(filePath);
-		else
-		{
-			using HttpClient httpClient = new();
-			HttpResponseMessage responseMessage = await httpClient.GetAsync(uri);
-			if (responseMessage.IsSuccessStatusCode is false)
-				return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
-
-			Stream stream = await responseMessage.Content.ReadAsStreamAsync();
-			// load stream into byte array
-			bytes = new byte[stream.Length];
-			await stream.ReadAsync(bytes.AsMemory(0, (int)stream.Length));
-			stream.Dispose();
-		}
-
-		return bytes;
-	}
-
-	public async Task<Stream> GetImageAsStreamAsync(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-		//lock (s_sha256)
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-
-		//ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-
-		byte[] filenameSeed = new byte[16];
-		Array.Copy(uriHash, filenameSeed, 16);
-		Guid filename = new(filenameSeed);
-		if (Directory.Exists(ImageCachePath) is false)
-			Directory.CreateDirectory(ImageCachePath);
-
-		string filePath = $"{ImageCachePath}\\{filename}";
-
-		if (File.Exists(filePath) is false)
-			await KeepAsync(uri);
-
-
-		return new MemoryStream(await File.ReadAllBytesAsync(filePath));
-
-		//using FileStream fs = new(filePath, FileMode.Open);
-		//using BinaryReader br = new(fs);
-		//int length = br.ReadInt32();
-		//byte[] bytes = br.ReadBytes(length);
-		//fs.Flush();
-		//fs.Close();
-		//br.Close();
-		//fs.Dispose();
-		//br.Dispose();
-
-		//return new MemoryStream(bytes);
-	}
-
-	private static string GetFilename(Uri uri)
+	/// <param name="uri">The <see cref="Uri"/> whose filename to lookup.</param>
+	/// <returns>A <see cref="Guid"/> as a <see cref="string"/>.</returns>
+	public static string GetFilename(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)
 		{
 			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-
 			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
 			Guid filename = new(filenameSeed);
 
@@ -212,143 +76,73 @@ public class ImageCacheV3Async
 
 
 	/// <summary>
+	/// Writes the buffer to the filesystem, a Guid from the first 16 buffer has a hash of the Uri to make a filename.
+	/// </summary>
+	/// <param name="uri">The URI of the image about to be kept in storage.</param>
+	public static async Task KeepAsync(Uri uri)
+	{
+		ArgumentNullException.ThrowIfNull(uri);
+
+		if (Directory.Exists(ImageCachePath) is false)
+			Directory.CreateDirectory(ImageCachePath);
+
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+		if (File.Exists(pathToCachedFile))
+			return;
+
+		byte[]? bytes = await GetImageAsBytesAsync(uri).ConfigureAwait(false);
+		await File.WriteAllBytesAsync($"{pathToCachedFile}", bytes!).ConfigureAwait(false);
+
+		if (s_cachedUris.Contains(uri.AbsoluteUri) is false)
+			s_cachedUris.Add(uri.AbsoluteUri);
+	}
+
+
+	public async Task<Stream> GetImageAsStreamAsync(Uri uri)
+	{
+		ArgumentNullException.ThrowIfNull(uri);
+
+		if (Directory.Exists(ImageCachePath) is false)
+			Directory.CreateDirectory(ImageCachePath);
+
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+		if (File.Exists(pathToCachedFile) is false)
+			await KeepAsync(uri).ConfigureAwait(true);
+
+		//byte[] buffer = await File.ReadAllBytesAsync(pathToCachedFile).ConfigureAwait(false);
+
+		byte[] buffer = await GetFromStorageAsBytesAsync(uri);
+		return new MemoryStream(buffer);
+	}
+
+
+	/// <summary>
 	/// Gets image from URI and returns it as an <see cref="ImageSource"/>.
 	/// </summary>
-	/// <param name="uri">URI of image to cache.</param>
+	/// <param name="uri"><see cref="Uri"/> of image to cache.</param>
 	/// <returns>The image is returned as an <see cref="ImageSource"/>.</returns>
 	public async Task<ImageSource> GetAsImageSourceAsync(Uri uri)
 	{
 		if (string.IsNullOrEmpty(uri.AbsoluteUri))
-			return null;
+			return null!;
 
-		//		lock (s_sha256)
 
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-
-		//ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-
-		byte[] filenameSeed = new byte[16];
-		Array.Copy(uriHash, filenameSeed, 16);
-		Guid filename = new(filenameSeed);
-
-		string filePath = $"{ImageCachePath}\\{filename}";
 		if (Directory.Exists(ImageCachePath) is false)
 			Directory.CreateDirectory(ImageCachePath);
 
-		if (File.Exists(filePath) is false || s_cachedUris.Contains(uri.AbsoluteUri) is false)
-			await KeepAsync(uri);
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 
-		byte[] buffer = await File.ReadAllBytesAsync(filePath);
+		if (File.Exists(pathToCachedFile) is false || s_cachedUris.Contains(uri.AbsoluteUri) is false)
+			await KeepAsync(uri).ConfigureAwait(false);
+
+		byte[] buffer = File.ReadAllBytes(pathToCachedFile);
 
 		return ImageSource.FromStream(() =>
 		{
 			return new MemoryStream(buffer);
 		});
-
-
-
-		//			using HttpClient httpClient = new();
-		//		HttpResponseMessage responseMessage = httpClient.GetAsync(uri).Result;
-		//		if (responseMessage.IsSuccessStatusCode is false)
-		//			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
-
-		//		Stream stream = responseMessage.Content.ReadAsStreamAsync().Result;
-		//#if WINDOWS
-		//		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(stream);
-		//#elif IOS || ANDROID || MACCATALYST
-		//		Microsoft.Maui.Graphics.IImage img = PlatformImage.FromStream(stream);
-		//#endif
-		//		byte[] bytes = img.AsBytes();
-
-		//		return ImageSource.FromStream(() => new MemoryStream(bytes));
 	}
 
-
-	/// <summary>
-	/// Adds an image to the store with a hash of the byte array of the image as the key.
-	/// If the key does not exist the image is added to the store.
-	/// The input byte array is returned is returned in either case.
-	/// </summary>
-	/// <param name="image">The input as a byte array of the image.</param>
-	/// <returns>The byte array of the image.</returns>
-	//public static byte[] Add(byte[] image)
-	//{
-	//	string key = Encoding.UTF8.GetString(s_sha256.ComputeHash(image));
-	//	if (!s_imageStore.TryAdd(key, image))
-	//		s_imageStore[key] = image;	
-	//	return image;
-	//}
-
-
-	/// <summary>
-	/// A Func that returns a stream of byte[], which can be used to set an ImageSource
-	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage,
-	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
-	/// <code>Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
-	/// </code>
-	/// </summary>
-	/// <example>
-	/// Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
-	/// 
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
-	/// </example>
-	/// <param name="url">A URL for the image as a string.</param>
-	/// <returns>A MemoryStream of the byte array of the image.</returns>
-	//public static Func<Stream> AsFuncStream(string url)
-	//{
-	//	if (s_imageStore.TryGetValue(url, out byte[]? value))
-	//		return () => new MemoryStream(value);
-	//	else
-	//	{
-	//		Add(new Uri(url));
-	//		return () => new MemoryStream(s_imageStore[url]);
-	//	}
-	//}
-
-	/// <summary>
-	/// A Func that returns a stream of byte[], which can be used to set an ImageSource
-	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage,
-	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
-	/// <code>Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
-	/// </code>
-	/// </summary>
-	/// <example>
-	/// Microsoft.Maui.Controls.Image _img;
-	/// ImageCache _imageCache = new ImageCache();
-	/// 
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
-	/// </example>
-	/// <param name="uri">A URI whose .AbsoluteUri property is the location of the image.</param>
-	/// <returns>A MemoryStream of the byte array of the image.</returns>
-	public async Task<Func<Stream>> AsFuncStream2Async(Uri uri)
-	{
-		ArgumentNullException.ThrowIfNull(uri);
-
-		//if (s_imageStore.TryGetValue(uri.AbsoluteUri, out byte[]? value))
-		//	return () => new MemoryStream(value);
-		//else
-		//{
-		//	Add(uri);
-		//	return () => new MemoryStream(s_imageStore[uri.AbsoluteUri]);
-		//}
-
-
-		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
-		if (!s_cachedUris.Contains(pathToCachedFile))
-		{
-			if (Directory.Exists(ImageCachePath) is false)
-				Directory.CreateDirectory(ImageCachePath);
-			s_cachedUris.Add(pathToCachedFile);
-			await KeepAsync(uri);
-		}
-
-		return () => new MemoryStream(GetFromStorageAsBytesAsync(uri).Result);
-	}
 
 	/// <summary>
 	/// A Func that returns a MemoryStream which can be used to set an ImageSource
@@ -356,68 +150,51 @@ public class ImageCacheV3Async
 	/// for example in conjunction with ImageSource.FromStream(Func‹stream› stream):
 	/// <code>Microsoft.Maui.Controls.Image _img;
 	/// ImageCache _imageCache = new ImageCache();
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri))
+	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(url))
 	/// </code>
 	/// </summary>
 	/// <example>
 	/// Microsoft.Maui.Controls.Image _img;
 	/// ImageCache _imageCache = new ImageCache();
 	/// 
-	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(uri));
+	/// _img.Source = ImageSource.FromStream(_imageCache.AsFuncStream(url));
 	/// </example>
-	/// <param name="uri">A URI whose .AbsoluteUri property is the location of the image.</param>
-	/// <returns>A MemoryStream of the byte array of the image.</returns>
+	/// <param name="uri">A <see cref="Uri"/> whose .AbsoluteUri property is the location of the image.</param>
+	/// <returns>A <see cref="MemoryStream"/> of the byte array of the image.</returns>
 	public async Task<Func<Stream>> AsFuncStreamAsync(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-		//ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-		byte[] filenameSeed = new byte[16];
-		Array.Copy(uriHash, filenameSeed, 16);
-		Guid filename = new(filenameSeed);
-		string pathToCachedFile = $"{ImageCachePath}\\{filename}";
-		if (!s_cachedUris.Contains(pathToCachedFile))
-		{
-			if (Directory.Exists(ImageCachePath) is false)
-				Directory.CreateDirectory(ImageCachePath);
 
-			s_cachedUris.Add(pathToCachedFile);
+		if (!s_cachedUris.Contains(uri.AbsoluteUri))
+		{
+			s_cachedUris.Add(uri.AbsoluteUri);
 			await KeepAsync(uri);
 		}
+		byte[] buffer = await GetFromStorageAsBytesAsync(uri);
 
-		return () => new MemoryStream(GetFromStorageAsBytesAsync(uri).Result);
+		//string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+		//byte[] buffer = File.ReadAllBytes(pathToCachedFile);//.ConfigureAwait(false);
+
+		return () => new MemoryStream(buffer);
 	}
 
-	private static async Task<byte[]> GetFromStorageAsBytesAsync(Uri uri)
+
+	/// <summary>
+	/// Looks for a key equal to the URL and returns a stream of <see cref="byte"/>[], which can be used to set an ImageSource
+	/// </summary>
+	/// <param name="uri">A <see cref="Uri"/> whose .AbsoluteUri property is the location of the image.</param>
+	/// <returns>A <see cref="byte"/> array of the image from storage.</returns>
+	public static async Task<byte[]> GetFromStorageAsBytesAsync(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
-		//lock (s_sha256)
-		byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-		//ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-
-		byte[] filenameSeed = new byte[16];
-		Array.Copy(uriHash, filenameSeed, 16);
-		Guid filename = new(filenameSeed);
-		string filePath = $"{ImageCachePath}\\{filename}";
-		//		using FileStream fs = new(filePath, FileMode.Open);
-		//#if WINDOWS
-		//		Microsoft.Maui.Graphics.IImage img = new W2DImageLoadingService().FromStream(fs);
-		//#elif IOS || ANDROID || MACCATALYST
-		//		Microsoft.Maui.Graphics.IImage img = PlatformImage.FromStream(fs);
-		//#endif
-		//		byte[] bytes = img.AsBytes();
-		//		fs.Close();
-		//		fs.Dispose();
-		//		img.Dispose();
-
-		//		return bytes;
+		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 		if (Directory.Exists(ImageCachePath) is false)
 		{
 			Directory.CreateDirectory(ImageCachePath);
 			await KeepAsync(uri);
 		}
 
-		return await File.ReadAllBytesAsync(filePath);
+		return File.ReadAllBytes(pathToCachedFile);
 	}
 
 
@@ -425,100 +202,68 @@ public class ImageCacheV3Async
 	/// Looks for a key equal to the URL and returns a stream of byte[], which can be used to set an ImageSource
 	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage.
 	/// 
-	/// If not found, the image is cached and then as a MemoryStream of its bytes.
-	/// </summary>
-	/// <param name="url">The URL is both the key and the location of the image on the Internet.</param>
-	/// <returns>A MemoryStream of the byte array of the image.</returns>
-	//public static Stream AsStream(string url)
-	//{
-	//	if (s_imageStore.TryGetValue(url, out byte[]? value))
-	//		return new MemoryStream(value);
-	//	else
-	//	{
-	//		Add(url);
-	//		return new MemoryStream(s_imageStore[url]);
-	//	}
-	//}
-
-
-	/// <summary>
-	/// Looks for a key equal to the URL and returns a stream of byte[], which can be used to set an ImageSource
-	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage.
-	/// 
-	/// If not found, the image is cached and then as a MemoryStream of its bytes.
+	/// If not found, the image is cached and then as a MemoryStream of its buffer.
 	/// </summary>
 	/// <param name="uri">The URI is both the key and the location of the image on the Internet.</param>
 	/// <returns>A MemoryStream of the byte array of the image.</returns>
-	//public static Stream AsStream(Uri uri)
-	//{
-	//	if (s_imageStore.TryGetValue(uri.AbsoluteUri, out byte[]? value))
-	//		return new MemoryStream(value);
-	//	else
-	//	{
-	//		Add(uri);
-	//		return new MemoryStream(s_imageStore[uri.AbsoluteUri]);
-	//	}
-	//}
-
 	public async Task<Stream> AsStreamAsync(Uri uri)
 	{
-		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
-		if (!s_cachedUris.Contains(pathToCachedFile))
+
+		if (!s_cachedUris.Contains(uri.AbsoluteUri))
 		{
 			if (Directory.Exists(ImageCachePath) is false)
 				Directory.CreateDirectory(ImageCachePath);
 
 			await KeepAsync(uri);
-			return new MemoryStream(await GetImageAsBytesAsync(uri)!);
+			byte[]? buffer = await GetImageAsBytesAsync(uri);
+			return new MemoryStream(buffer!);
 		}
 		else
-			return new MemoryStream(await GetFromStorageAsBytesAsync(uri));
+		{
+			//string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+			//byte[] buffer = File.ReadAllBytes(pathToCachedFile);//.ConfigureAwait(false);
+			byte[] buffer = await GetFromStorageAsBytesAsync(uri);
+
+			return new MemoryStream(buffer);
+
+			//return new MemoryStream(await GetFromStorageAsBytesAsync(uri));
+		}
 	}
 
-	/// <summary>
-	/// Looks for a key equal to the string and returns a stream of byte[], which can be used to set an ImageSource
-	/// on objects like the Microsoft.Maui.Controls.Image or the Microsoft.Maui.Graphics.IImage.
-	/// 
-	/// If not found, null is returned.
-	/// </summary>
-	/// <param name="key">The URL is both the key and the location of the image on the Internet.</param>
-	/// <returns>A MemoryStream of the byte array of the image or null.</returns>
-	//public static byte[]? AsBytes(string key) => 
-	//	s_imageStore.TryGetValue(key, out byte[]? value) ? value 
-	//														   : null;
+
+	//public async static Task<byte[]> GetAsBytesAsync(Uri uri)
+	//{
+	//	ArgumentNullException.ThrowIfNull(uri);
+
+	//	if (Directory.Exists(ImageCachePath) is false)
+	//		Directory.CreateDirectory(ImageCachePath);
+
+	//	string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+	//	byte[] bytes;
+	//	if (File.Exists(pathToCachedFile))
+	//		bytes = await File.ReadAllBytesAsync(pathToCachedFile).ConfigureAwait(false);
+	//	else
+	//	{
+	//		using HttpClient httpClient = new();
+	//		HttpResponseMessage responseMessage = await httpClient.GetAsync(uri).ConfigureAwait(false);
+
+	//		if (responseMessage.IsSuccessStatusCode is false)
+	//			throw new HttpRequestException($"Failed to get image from {uri.AbsoluteUri}.");
+
+	//		Stream stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
 
-	/// <summary>
-	/// Looks for a key equal to the URL and returns a the image as a byte array.
-	/// If not found, null is returned.
-	/// </summary>
-	/// <param name="url">The URL is both the key and the location of the image on the Internet.</param>
-	/// <returns>The byte array of the image if found, or null.</returns>
-	public async Task<byte[]?> GetImageAsBytesAsync(string url)
-	{
-		if (string.IsNullOrEmpty(url))
-			return null;
+	//		// load stream into byte array
+	//		bytes = new byte[stream.Length];
+	//		//await File.WriteAllBytesAsync($"{filePath}", buffer);
+	//		// File.WriteAllBytes($"{filePath}", buffer);
+	//		//await stream.ReadAsync(buffer.AsMemory(0, (int)stream.Length));
+	//		stream.Dispose();
+	//	}
 
-		Uri uri = new Uri(url);
-		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
+	//	return bytes;
+	//}
 
-		if (Directory.Exists(ImageCachePath) is false)
-			Directory.CreateDirectory(ImageCachePath);
-
-		if (File.Exists(pathToCachedFile))
-			return await File.ReadAllBytesAsync(pathToCachedFile);
-
-		using HttpClient httpClient = new();
-		HttpResponseMessage responseMessage = await httpClient.GetAsync(uri);
-		Stream stream = await responseMessage.Content.ReadAsStreamAsync();
-		// load stream into byte array
-		byte[] bytes = new byte[stream.Length];
-		await stream.ReadAsync(bytes.AsMemory(0, (int)stream.Length));
-		stream.Dispose();
-
-
-		return bytes;
-	}
 
 	/// <summary>
 	/// Looks for a key equal to the URI's .AbsoluteUri property and returns a the image as a byte array.
@@ -526,10 +271,9 @@ public class ImageCacheV3Async
 	/// </summary>
 	/// <param name="uri">The URI is both the key and the location of the image on the Internet.</param>
 	/// <returns>The byte array of the image if found, or null.</returns>
-	public async Task<byte[]?> GetImageAsBytesAsync(Uri uri)
+	public static async Task<byte[]?> GetImageAsBytesAsync(Uri uri)
 	{
-		if (string.IsNullOrEmpty(uri.AbsoluteUri))
-			return null;
+		ArgumentNullException.ThrowIfNull(uri);
 
 		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 
@@ -537,105 +281,95 @@ public class ImageCacheV3Async
 			Directory.CreateDirectory(ImageCachePath);
 
 		if (File.Exists(pathToCachedFile))
-			return await File.ReadAllBytesAsync(pathToCachedFile);
+		{
+			byte[] buffer = await GetFromStorageAsBytesAsync(uri);
+			return buffer;
+			//return File.ReadAllBytes(pathToCachedFile);//.ConfigureAwait(false);
+		}
+			
 
 
 		using HttpClient httpClient = new();
-		HttpResponseMessage responseMessage = await httpClient.GetAsync(uri);
+		HttpResponseMessage responseMessage = await httpClient.GetAsync(uri).ConfigureAwait(false);
 		if (responseMessage.IsSuccessStatusCode is false)
-			return null; //throw new Exception($"Failed to get image from {uri.AbsoluteUri}.");
+			return null; //throw new Exception($"Failed to get image from {url.AbsoluteUri}.");
 
-		Stream stream = await responseMessage.Content.ReadAsStreamAsync();
-		// load stream into byte array
+		using Stream stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
 		byte[] bytes = new byte[stream.Length];
-		await stream.ReadAsync(bytes.AsMemory(0, (int)stream.Length));
-		stream.Dispose();
+		await stream.ReadAsync(bytes.AsMemory(0, (int)stream.Length)).ConfigureAwait(false);
 
 		return bytes;
 	}
 
 
 	/// <summary>
-	/// Looks for a key equal to the string and returns a the size image in bytes.
-	/// If not found it is added then the size is returned. If null, -1 is returned.
-	/// </summary>
-	/// <param name="url">The URL is both the key and the location of the image on the Internet.</param>
-	/// <returns>The size of the image if found in bytes, as long. Or null.</returns>
-	//public static int GetNumberOfBytes(string url)
-	//{
-	//	if (string.IsNullOrEmpty(url))
-	//		return -1;
-
-	//	if (s_imageStore.TryGetValue(url, out byte[]? value))
-	//		return value.Length;
-	//	else
-	//	{
-	//		Add(new Uri(url));
-	//		return s_imageStore[url].Length;
-	//	}
-	//}
-
-
-	/// <summary>
-	/// Looks for a key equal to the string and returns a the size image in bytes.
+	/// Looks for a key equal to the string and returns a the size image in buffer.
 	/// If not found it is added then the size is returned. If null, -1 is returned.
 	/// </summary>
 	/// <param name="uri">The URL is both the key and the location of the image on the Internet.</param>
-	/// <returns>The size of the image if found in bytes, as long. Or null.</returns>
+	/// <returns>The size of the image if found in buffer, as long. Or null.</returns>
 	public async Task<int> GetNumberOfBytesAsync(Uri uri)
 	{
-		ArgumentNullException.ThrowIfNull(uri);
+		//ArgumentNullException.ThrowIfNull(uri);
+		if (uri is null)
+			return -1;
 
-		//if (s_imageStore.TryGetValue(uri.AbsoluteUri, out byte[]? value))
-		//	return value.Length;
-		//else
-		//{
-		//	Add(uri);
-		//	return s_imageStore[uri.AbsoluteUri].Length;
-		//}
-
-		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
-		if (!s_cachedUris.Contains(pathToCachedFile))
+		if (!s_cachedUris.Contains(uri.AbsoluteUri))
 		{
-			s_cachedUris.Add(pathToCachedFile);
-			await KeepAsync(uri);
+			s_cachedUris.Add(uri.AbsoluteUri);
+			await KeepAsync(uri).ConfigureAwait(false);
 		}
-		int length = (await GetImageAsBytesAsync(uri))?.Length ?? -1;
+		int length = (await GetImageAsBytesAsync(uri).ConfigureAwait(false))?.Length ?? -1;
+
 		return length;
 	}
 
 
+	/// <summary>
+	/// Looks for a key equal to the string and returns a the size image in buffer.
+	/// If not found it is added then the size is returned. If null, -1 is returned.
+	/// </summary>
+	/// <param name="url">The URL is both the key and the location of the image on the Internet.</param>
+	/// <returns>The size of the image if found in buffer, as long. Or null.</returns>
+	//public async Task<int> GetNumberOfBytesAsync(string url)
+	//{
+	//	ArgumentNullException.ThrowIfNull(url);
 
-	[Obsolete("Files are now saved automatically. You should still use Restore().")]
+	//	return await GetNumberOfBytesAsync(new Uri(url));
+
+	//	//string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(new (url))}";
+	//	//if (!s_cachedUris.Contains(pathToCachedFile))
+	//	//{
+	//	//	s_cachedUris.Add(pathToCachedFile);
+	//	//	await KeepAsync(new (url));
+	//	//}
+	//	//int length = (await GetImageAsBytesAsync(url))?.Length ?? -1;
+
+	//	//return length;
+	//}
+
+
+
 	/// <summary>
 	/// Saves the cache to the filesystem.
 	/// </summary>
 	/// <code>StatusLabel.Text = _imageStore.Save().Result;</code>
+	/// <remarks>Files are now saved automatically. You should still use <see cref="Restore"/>."</remarks>
 	/// <returns>A result string from a TResult. </returns>
-	public Task<string> Save()
+	public async Task<string> Save()
 	{
-		//using FileStream fs = new(cachePath, FileMode.OpenOrCreate);
-		//using BinaryWriter bw = new(fs);
-		//bw.Write(s_imageStore.Count);
-		//foreach (KeyValuePair<string, byte[]> kvp in s_imageStore)
-		//{
-		//	bw.Write(kvp.Key);
-		//	bw.Write(kvp.Value.Length);
-		//	bw.Write(kvp.Value);
-		//}
-		//fs.Close();
-		//fs.Dispose();
-		//bw.Close();
-		//bw.Dispose();
-		return Task.FromResult($"This method no longer does anything, as files are now saved automatically. You should still use Restore().");
+		foreach (string url in s_cachedUris)
+			await KeepAsync(new Uri(url)).ConfigureAwait(false);
+
+		return "Tracked URIs saved to cache.";
 	}
 
 
 	/// <summary>
-	/// Restores the cache from the filesystem, 
-	/// after using Dependency Injection to access the ImageCache, for example.
+	/// Restores the cache from the filesystem.
 	/// </summary>
 	/// <code>StatusLabel.Text = _imageStore.Restore().Result;</code>
+	/// <remarks>For example, when used after using Dependency Injection to access the ImageCache</remarks>
 	/// <returns>A string as TResult.</returns>
 	public Task<string> Restore()
 	{
@@ -660,21 +394,17 @@ public class ImageCacheV3Async
 		if (!Directory.Exists(ImageCachePath))
 			Directory.CreateDirectory(ImageCachePath);
 
-		if (s_cachedUris.Count == 0)
-			foreach (string file in Directory.GetFiles(ImageCachePath).ToList())
-				s_cachedUris.Add(file);
+		int count = Directory.GetFiles(ImageCachePath).ToList().Count;
 
-		if (s_cachedUris.Count == 0)
-			return Task.FromResult($"{ImageCachePath} was empty.");
-
-		return Task.FromResult($"{s_cachedUris.Count} items in cache.");
+		return Task.FromResult($"{count} items in cache.");
 	}
 
 
 	/// <summary>
-	/// Removes the cache from the filesystem.
+	/// Removes the cache from the filesystem, but does not clear the tracked URIs in memory.
 	/// </summary>
 	/// <code>StatusLabel.Text = _imageStore.Purge().Result;</code>
+	/// <remarks>You can, for example, Purge the images from disk and use <see cref="Save"/> to write them back to the cache.</remarks>
 	/// <returns>A string from a TResult.</returns>
 	public Task<string> Purge()
 	{
@@ -690,23 +420,13 @@ public class ImageCacheV3Async
 		Directory.Delete($"{ImageCachePath}");
 
 		return Task.FromResult($"Image cache purged from {ImageCachePath}.");
-
-		//string cachePath = $"{ImageCachePath}\\{CacheFile}";
-
-		//if (File.Exists(cachePath))
-		//{
-		//	File.Delete(cachePath);
-		//	return Task.FromResult($"Deleted cache at {cachePath}.");
-		//}
-		//else
-		//	return Task.FromResult($"Image cache not found at {cachePath}.");
 	}
 
 
 	/// <summary>
-	/// Clears the Dictionary.
+	/// Clears the Dictionary, but does not delete the files from the filesystem.
 	/// </summary>
-	public Task FreeMemory()
+	public Task Clear()
 	{
 		s_cachedUris.Clear();
 
