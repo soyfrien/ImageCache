@@ -6,7 +6,8 @@ using Microsoft.Maui.Storage;
 #elif IOS || ANDROID || MACCATALYST
 using Microsoft.Maui.Graphics.Platform;
 #endif
-namespace Ppdac.Cache;
+
+namespace Ppdac.Maui.Cache;
 
 /// <summary>
 /// Use this class to cache images from the Internet. Where ever you would give a control a URL, a stream, or byte[],
@@ -30,21 +31,14 @@ namespace Ppdac.Cache;
 ///		...
 /// </code>
 /// </summary>
-/// <permission cref="Ppdac.Cache">This class is public.</permission>
+/// <permission cref="Ppdac.Maui.Cache">This class is public.</permission>
 public class ImageCache
 {
-	private static string _imageCachePath = $"{FileSystem.Current.CacheDirectory}\\ppdac";
-	private static string _cacheFile = "ppdac.imagecache.dat";
-	public static string ImageCachePath
-	{
-		get => _imageCachePath;
-		set => _imageCachePath = value;
-	}
-	public static string CacheFile
-	{
-		get => _cacheFile;
-		set => _cacheFile = value;
-	}
+	/// <summary>
+	/// This property sets the location of the cache.
+	/// The default is a folder named "ppdac" in the <see cref="FileSystem.CacheDirectory"/>.
+	/// </summary>
+	public static string ImageCachePath { get; set; } = $"{FileSystem.Current.CacheDirectory}\\ppdac";
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
 	private static readonly List<string> s_cachedUris = [];
 
@@ -60,7 +54,7 @@ public class ImageCache
 	/// </summary>
 	/// <param name="uri">The <see cref="Uri"/> whose filename to lookup.</param>
 	/// <returns>A <see cref="Guid"/> as a <see cref="string"/>.</returns>
-	public static string GetFilename(Uri uri)
+	internal static string GetFilename(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_sha256)

@@ -1,4 +1,4 @@
-Ppdac.ImageCache.Maui License v1.0 November 13, 2023
+Ppdac.Cache.ImageStore License v1.0 November 13, 2023
 Copyright (c) Louis A. Waweru; PPDAC, Ltd.
 
 Ppdac.ImageCache.Maui License v1.0 November 13, 2023
