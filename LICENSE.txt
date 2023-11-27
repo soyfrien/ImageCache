@@ -1,23 +1,22 @@
-Ppdac.Cache.ImageStore License v1.0 November 13, 2023
+Ppdac.Cache.ImageCache License v1.0 November 13, 2023
 Copyright (c) Louis A. Waweru; PPDAC, Ltd.
 
-Ppdac.ImageCache.Maui License v1.0 November 13, 2023
+Ppdac.Cache.Maui License v1.0 November 13, 2023
 ============================================
 
 Summary:
 1. You may license this software Commercially or Open Source at your own choice.
 2. You are actively encouraged to report bugs and contribute to this repository.
-3. Contributors have a voice, but are not the project or software owners.
 
 PPDAC Contribution Agreement
 ============================================
-This PPDAC LTD (aka “PPDAC” or “Louis Waweru” or "Tokibits") project and everyone participating in it is governed by the following Contribution Agreement which may evolve over time.
+This PPDAC LTD (aka “PPDAC” or “Louis Waweru”) project and everyone participating in it is governed by the following Contribution Agreement which may evolve over time.
 By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to oss@ppdac.ltd.
 
 Contributions Are Appreciated and Welcome
 --------------------------------------------
 * If you are skilled enough to improve this library please share:
-   - Please make a pull request to: https://github.com/ppdac/Ppdac.ImageCache.Maui/pulls
+   - Please make a pull request to: https://github.com/ppdac/Ppdac.Cache.Maui/pulls
 * Contributions to this repository, any Fork, or copy remains with PPDAC LTD under the MIT license terms.
 * You may add a note to any significant code contributions you have made, but may not copyright or patent your changes.
     * You may not modify licensing or copyright of any part or any derivative work (including a fork) of this software in any way without formal written consent.
@@ -35,8 +34,8 @@ License Awareness
 This license adapted from IronSoftware.Drawing Split License Version 1.0 Sep 2022.
 Obey copyright and patents. The software industry revolves on trust.
 You should be aware of the license of all required or optional Nuget dependencies including .NET libraries published on nuget.org or elsewhere including:
-    * Microsoft.Maui.Graphics under MIT licensing (like this is).
-    * Microsoft.Maui.Controls under MIT licensing.
+    * Microsoft.Maui.Controls under MIT licensing (like this is).
+    * Microsoft.Maui.Storage under MIT licensing.
 
 Permissive Split Licensing
 --------------------------------------------
@@ -53,7 +52,7 @@ Summary of Commercial Licensing Benefits:
 It is often worth paying for something that is free:
 * Developer support is available to Commercial Licensing customers when purchased and agreed by both parties.
 * Purchasing gives you the option to replace the MIT Open Source license below with Commercial Licensing
-    *  Commercial Licensing Terms are found at: https://github.com/ppdac/Ppdac.ImageCache.Maui/blob/master/NuGet/EULA.txt and within this software.
+    *  Commercial Licensing Terms are found at: https://github.com/ppdac/Ppdac.Cache/blob/master/NuGet/EULA.txt and within this software.
     *  The MIT public license agreement no longer applies and the MIT license below need not be shipped inside or alongside your software
 * Enhanced versions of Ppdac.ImageCache.Maui with additional features may be released and available to Commercial Licensing users.
     * This may include:
