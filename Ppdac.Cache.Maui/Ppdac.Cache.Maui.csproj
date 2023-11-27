@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net7.0;net8.0;</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>Ppdac.Cache.Maui.ImageCache</Title>
+		<PackageId>$(AssemblyName)</PackageId>
+		<Authors>LouisWaweru</Authors>
+		<Company>PPDAC, Ltd.</Company>
+		<Description>
+			Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[],
+			continue doing that as normal, but have ImageCache act as the intermediary. For example, instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).
+		</Description>
+		<Copyright>©2023 Louis A. Waweru; PPDAC, Ltd.</Copyright>
+		<PackageProjectUrl>https://ppdac.ltd/ImageCache</PackageProjectUrl>
+		<PackageTags>cache; caching; image cache; </PackageTags>
+		<PackageReleaseNotes>This version is for use in .NET MAUI. For other projects you may instead use: Ppdac.Cache.ImageCache.</PackageReleaseNotes>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\ImageCache\Ppdac.Cache.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
+	</ItemGroup>
+
+</Project>
