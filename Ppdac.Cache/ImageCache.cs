@@ -29,7 +29,7 @@ namespace Ppdac.Cache;
 ///		...
 /// </code>
 /// </summary>
-/// <permission cref="Ppdac.ImageCache">This class is public.</permission>
+/// <permission cref="Ppdac.Cache">This class is public.</permission>
 public class ImageCache
 {
 	// Release value for ImageCachePath when Microsoft.Maui.Storage is available: Path.Combine(FileSystem.Current.CacheDirectory, "ppdac");
@@ -41,13 +41,12 @@ public class ImageCache
 	/// Defaults to the App's CacheDirectory on Windows, Android, iOS, and Mac Catalyst, or when running on .NET 7.0 or newer,
 	/// or to the user's AppData folder on Windows when running on .NET 5.0 or older.
 	/// </remarks>
-#if NET7_0_OR_GREATER
-	public string ImageCachePath { get; set; } = Path.Combine(FileSystem.Current.CacheDirectory, "ppdac");
-#elif NET6_0
-	public string ImageCachePath { get; set; } = 
-		Path.Combine(Environment.GetFolderPath(
-			folder: Environment.SpecialFolder.ApplicationData),
-			"ppdac.cache.imagecache");
+#if NET7_0_OR_GREATER && (ANDROID || IOS || MACCATALYST || WINDOWS)
+	public string ImageCachePath { get; set; } = Path.Combine(FileSystem.Current.CacheDirectory,
+															  "ppdac.cache.imagecache");
+#else
+	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
+															  "ppdac.cache.imagecache");
 #endif
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
 	/// <summary>

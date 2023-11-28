@@ -1,9 +1,9 @@
 ﻿using Ppdac.Cache.Maui;
 
-namespace Ppdac.Cache.Tests;
+namespace Ppdac.Cache.Maui.Tests;
 
 [TestClass]
-public class ImageCache_Restore_Should
+public class ImageCacheMaui_Restore_Should
 {
 	private readonly ImageCache _imageCache;
 	private readonly List<Uri> _imageUris = [
@@ -15,7 +15,7 @@ public class ImageCache_Restore_Should
 
 
 
-	public ImageCache_Restore_Should()
+	public ImageCacheMaui_Restore_Should()
 	{
 		_imageCache = new ImageCache
 		{
@@ -43,6 +43,27 @@ public class ImageCache_Restore_Should
 	[TestMethod("Restores cached items to tracked Uris.")]
 	public void Restore_ReturnTask()
 	{
+		Maui.ImageCache imageCacheMaui = new Maui.ImageCache
+		{
+			ImageCachePath = @"..\Out\CachedItems\Restore"
+		};
+
+		// Arrange: Add an item to cache by getting it as an ImageSource
+		ImageSource imageSource = imageCacheMaui.GetAsImageSourceAsync(_imageUris[0]).Result;
+		Assert.IsTrue(ImageCache.Count > 0);
+		ImageCache.Clear();
+		Assert.AreEqual(0, ImageCache.Count);
+
+
+		// Act
+		Task<string> result = _imageCache.Restore();
+
+
+		// Assert: Ensure the item is restored
+		Assert.AreEqual(0, ImageCache.Count);
+		Assert.IsTrue(result.IsCompletedSuccessfully);
+
+
 		// Rearrange: Add a second item to cache by getting it as a Stream
 		Stream? imageSream = _imageCache.GetAsStreamAsync(_imageUris[1]).Result;
 		ImageCache.Clear();
@@ -50,7 +71,7 @@ public class ImageCache_Restore_Should
 
 
 		// Act
-		Task<string> result = _imageCache.Restore();
+		result = _imageCache.Restore();
 
 
 		// Assert: Ensure both items are restored

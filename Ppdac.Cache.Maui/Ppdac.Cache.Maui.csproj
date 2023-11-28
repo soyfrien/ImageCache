@@ -21,11 +21,10 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
-
 	<ItemGroup>
-		<ProjectReference Include="..\ImageCache\Ppdac.Cache.csproj" />
+		<ProjectReference Include="..\Ppdac.Cache\Ppdac.Cache.csproj" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
 	</ItemGroup>

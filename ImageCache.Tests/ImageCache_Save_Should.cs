@@ -1,14 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Ppdac.Cache;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Ppdac.Cache.Tests;
 
-namespace Ppdac.Cache.Tests;
-
-[TestClass()]
+[TestClass]
 public class ImageCache_Save_Should
 {
 	private readonly ImageCache _imageCache;
@@ -22,7 +14,7 @@ public class ImageCache_Save_Should
 	public ImageCache_Save_Should()
 	{
 		_imageCache = new ImageCache();
-		ImageCache.ImageCachePath = @"..\Out\CachedItems\Save";
+		_imageCache.ImageCachePath = @"..\Out\CachedItems\Save";
 	}
 
 
@@ -30,15 +22,15 @@ public class ImageCache_Save_Should
 	public void Save_WriteTrackedUrisToCache()
 	{
 		foreach (Uri uri in _imageUris)
-			ImageCache.KeepAsync(uri).Wait();
+			_imageCache.KeepAsync(uri).Wait();
 
 		Assert.AreEqual(_imageUris.Count, ImageCache.Count);
 
 		// Check the three files are in the cache folder.
 		foreach (Uri uri in _imageUris)
 		{
-			string filename = ImageCache.GetFilename(uri);
-			string createdFilePath = Path.Combine(ImageCache.ImageCachePath, filename);
+			string filename = GetFilename.FromUri(uri);
+			string createdFilePath = Path.Combine(_imageCache.ImageCachePath, filename);
 			Assert.IsTrue(File.Exists(createdFilePath));
 		}
 
@@ -47,22 +39,28 @@ public class ImageCache_Save_Should
 
 		// Check the cache is empty.
 		Assert.AreEqual(3, ImageCache.Count);
-		foreach(Uri uri in _imageUris)
+		foreach (Uri uri in _imageUris)
 		{
-			string filename = ImageCache.GetFilename(uri);
-			string createdFilePath = Path.Combine(ImageCache.ImageCachePath, filename);
+			string filename = GetFilename.FromUri(uri);
+			string createdFilePath = Path.Combine(_imageCache.ImageCachePath, filename);
 			Assert.IsFalse(File.Exists(createdFilePath));
 		}
 
-		// Save the tracked Uris to the cache.
-		_imageCache.Save().Wait();
+
+		Task result = _imageCache.Save();
+		result.Wait();
+		Assert.IsTrue(result.IsCompleted);
+		Assert.IsTrue(result.IsCompletedSuccessfully);
+
+
 
 		// Check the cache is not empty.
 		Assert.AreEqual(_imageUris.Count, ImageCache.Count);
+
 		foreach (Uri uri in _imageUris)
 		{
-			string filename = ImageCache.GetFilename(uri);
-			string createdFilePath = Path.Combine(ImageCache.ImageCachePath, filename);
+			string filename = GetFilename.FromUri(uri);
+			string createdFilePath = Path.Combine(_imageCache.ImageCachePath, filename);
 			Assert.IsTrue(File.Exists(createdFilePath));
 		}
 

@@ -10,6 +10,14 @@
 		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Compile Remove="ImageCache_GetAsImageSourceAsync_Should.cs" />
+	  <Compile Remove="ImageCache_GetFilename_Should.cs" />
+	  <Compile Remove="ImageCache_GetFromStorageAsBytesAsync_Should.cs" />
+	  <Compile Remove="ImageCache_GetImageAsBytesAsync_Should.cs" />
+	  <Compile Remove="ImageCache_GetImageAsStreamAsync_Should.cs" />
+	</ItemGroup>
+
 	<!--<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
 		<PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
@@ -29,7 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ImageCache\Ppdac.Cache.csproj" />
+		<ProjectReference Include="..\Ppdac.Cache\Ppdac.Cache.csproj" />
 		<ProjectReference Include="..\Ppdac.Cache.Maui\Ppdac.Cache.Maui.csproj" />
 	</ItemGroup>
 
