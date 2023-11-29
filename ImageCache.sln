@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ppdac.Cache", ".\Ppdac.Cache\Ppdac.Cache.csproj", "{381C3831-2BB7-4BDD-A152-CAC85F7B73BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ppdac.Cache", "Ppdac.Cache\Ppdac.Cache.csproj", "{381C3831-2BB7-4BDD-A152-CAC85F7B73BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ppdac.Cache.Maui", ".\Ppdac.Cache.Maui\Ppdac.Cache.Maui.csproj", "{A42EB0F8-A03C-4574-9EFD-15C311451B48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ppdac.Cache.Maui", "Ppdac.Cache.Maui\Ppdac.Cache.Maui.csproj", "{A42EB0F8-A03C-4574-9EFD-15C311451B48}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageCache.Tests", ".\ImageCache.Tests\ImageCache.Tests.csproj", "{C2234D24-FD51-475C-A275-7DB418E51B7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageCache.Tests", "ImageCache.Tests\ImageCache.Tests.csproj", "{E365102A-DCE2-42C2-83BD-62C9A9724539}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{A42EB0F8-A03C-4574-9EFD-15C311451B48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A42EB0F8-A03C-4574-9EFD-15C311451B48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A42EB0F8-A03C-4574-9EFD-15C311451B48}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C2234D24-FD51-475C-A275-7DB418E51B7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C2234D24-FD51-475C-A275-7DB418E51B7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C2234D24-FD51-475C-A275-7DB418E51B7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C2234D24-FD51-475C-A275-7DB418E51B7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E365102A-DCE2-42C2-83BD-62C9A9724539}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E365102A-DCE2-42C2-83BD-62C9A9724539}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E365102A-DCE2-42C2-83BD-62C9A9724539}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E365102A-DCE2-42C2-83BD-62C9A9724539}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

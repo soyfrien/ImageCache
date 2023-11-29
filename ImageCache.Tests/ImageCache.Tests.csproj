@@ -8,6 +8,7 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
+		<ApplicationIcon>ppdac-logo-pink.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,10 +19,14 @@
 	  <Compile Remove="ImageCache_GetImageAsStreamAsync_Should.cs" />
 	</ItemGroup>
 
-	<!--<ItemGroup>
+	<ItemGroup>
+	  <Content Include="ppdac-logo-pink.ico" />
+	</ItemGroup>
+	
+	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
 		<PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
-	</ItemGroup>-->
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />

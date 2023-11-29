@@ -20,10 +20,11 @@ public class ImageCache : Cache.ImageCache
 			return null!;
 		if (Directory.Exists(ImageCachePath) is false)
 			Directory.CreateDirectory(ImageCachePath);
+
 		string pathToCachedFile = $"{ImageCachePath}\\{GetFilename(uri)}";
 		if (File.Exists(pathToCachedFile) is false || s_cachedUris.Contains(uri.AbsoluteUri) is false)
 			await KeepAsync(uri).ConfigureAwait(false);
-		byte[] buffer = File.ReadAllBytes(pathToCachedFile);
+		byte[] buffer = await File.ReadAllBytesAsync(pathToCachedFile).ConfigureAwait(false);
 		
 		return ImageSource.FromStream(() =>
 		{

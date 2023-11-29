@@ -1,32 +1,55 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net8.0;</TargetFrameworks>
+
+
+		<TargetFrameworks>
+			net7.0;
+			net7.0-android;
+			net7.0-ios;
+			net7.0-maccatalyst;
+			net7.0-windows10.0.17763.0;
+			net7.0-windows10.0.19041.0;
+			net7.0-windows10.0.22000.0;
+			net7.0-windows10.0.22621.0;
+			net8.0;
+			net8.0-android;
+			net8.0-ios;
+			net8.0-maccatalyst;
+			net8.0-windows10.0.17763.0;
+			net8.0-windows10.0.19041.0;
+			net8.0-windows10.0.22000.0;
+			net8.0-windows10.0.22621.0;
+		</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Ppdac.Cache.Maui.ImageCache</Title>
 		<PackageId>$(AssemblyName)</PackageId>
-		<Authors>LouisWaweru</Authors>
+		<Authors>Louis Waweru</Authors>
 		<Company>PPDAC, Ltd.</Company>
-		<Description>
-			Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[],
-			continue doing that as normal, but have ImageCache act as the intermediary. For example, instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).
-		</Description>
+		<Description>Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[], continue doing that as normal, but have ImageCache act as the intermediary. For example, instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).</Description>
 		<Copyright>©2023 Louis A. Waweru; PPDAC, Ltd.</Copyright>
 		<PackageProjectUrl>https://ppdac.ltd/ImageCache</PackageProjectUrl>
-		<PackageTags>cache; caching; image cache; </PackageTags>
+		<PackageTags>cache; caching; image cache; maui;</PackageTags>
 		<PackageReleaseNotes>This version is for use in .NET MAUI. For other projects you may instead use: Ppdac.Cache.ImageCache.</PackageReleaseNotes>
-		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageIcon>ppdac-square-logo.png</PackageIcon>
 	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" PrivateAssets="compile;contentfiles;build;analyzers"/>
+	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Ppdac.Cache\Ppdac.Cache.csproj" />
+	  <ProjectReference Include="..\Ppdac.Cache\Ppdac.Cache.csproj" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
+	  <None Include="Icons\ppdac-square-logo.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 </Project>

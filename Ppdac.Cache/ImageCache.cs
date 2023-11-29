@@ -45,7 +45,7 @@ public class ImageCache
 	public string ImageCachePath { get; set; } = Path.Combine(FileSystem.Current.CacheDirectory,
 															  "ppdac.cache.imagecache");
 #else
-	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
+	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
 															  "ppdac.cache.imagecache");
 #endif
 	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
