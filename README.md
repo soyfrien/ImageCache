@@ -3,7 +3,7 @@
 This library allows one to save bandwidth or API calls by caching images locally in a cache folder.
 
 ## Video Demonstration
-![Demonstration video showing load times.](https://github.com/soyfrien/ImageCache/raw/main/ImageCacheDemo.mp4)
+![Demonstration GIF showing load times.](https://github.com/soyfrien/ImageCache/raw/main/ImageCacheDemo.gif)
 
 *Notice the instant load times for this CollectionView of web images.*
 
@@ -54,6 +54,16 @@ Page(ViewModel viewModel, ImageCache imageCache)
 	...
 ```
 ### Helper Helping Out However Examples
+With the flexible IImage:
+```
+#if WINDOWS
+		Microsoft.Maui.Graphics.IImage? image = new W2DImageLoadingService().FromStream(await _imageCache.GetAsStreamAsync(new Uri("https://example.com/e.jpg")));
+		// Microsoft.Maui.Graphics.IImage? image = new W2DImageLoadingService().FromStream(_imageCache.GetAsStreamAsync(new Uri("https://example.com/e.jpg")).Result);
+#elif IOS || ANDROID || MACCATALYST
+		Microsoft.Maui.Graphics.IImage image = PlatformImage.FromStream(_imageCache.GetAsStreamAsync(new Uri("https://example.com/e.jpg")).Result);
+#endif
+```
+
 You have an [Microsoft.Maui.Controls.Image](https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/image) that you currently pass a URL string into the `Source` property, instead of passing the string do something like:
 ```
 Source = await ImageCache.GetAsImageSourceAsync("https://www.example.com/image.png");
