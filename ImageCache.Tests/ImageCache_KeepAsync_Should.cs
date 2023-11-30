@@ -2,13 +2,14 @@
 
 
 [TestClass]
-[DeploymentItem(@".\Deployables\11250d6b-4460-eda2-bfea-9022169a5e88")]
+[DeploymentItem(@".\Deployables\335a2bf2-ddaa-43a8-3c79-acb61472aab8")]
 public class ImageCache_KeepAsync_Should
 {
 	private readonly ImageCache _imageCache;
-	// The URI of _imageUri will generate the following Guid filename: 11250d6b-4460-eda2-bfea-9022169a5e88
+	// old sha256 version: The URI of _imageUri will generate the following Guid filename: 335a2bf2-ddaa-43a8-3c79-acb61472aab8
+	// "new" md5 version: The URI of _imageUri will generate the following Guid filename: 335a2bf2-ddaa-43a8-3c79-acb61472aab8
 	private readonly Uri _imageUri = new("https://ppdac.ltd/wp-content/uploads/2020/10/logo@2x-1.png");
-	private const string _deployedFileName = "11250d6b-4460-eda2-bfea-9022169a5e88";
+	private const string _deployedFileName = "335a2bf2-ddaa-43a8-3c79-acb61472aab8";
 	public ImageCache_KeepAsync_Should() => _imageCache = new ImageCache();
 
 	[TestMethod("Cache a file from a Uri to storage, with a Guid for its name (should be the same number of bytes as the deployed file).")]

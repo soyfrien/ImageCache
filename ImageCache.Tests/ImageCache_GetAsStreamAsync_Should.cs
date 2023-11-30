@@ -1,13 +1,13 @@
 ﻿namespace Ppdac.Cache.Tests;
 
 [TestClass]
-[DeploymentItem(@".\Deployables\11250d6b-4460-eda2-bfea-9022169a5e88")]
+[DeploymentItem(@".\Deployables\335a2bf2-ddaa-43a8-3c79-acb61472aab8")]
 public class ImageCache_GetAsStreamAsync_Should
 {
 	private readonly ImageCache _imageCache;
-	// The URI of _imageUri will generate the following Guid filename: 11250d6b-4460-eda2-bfea-9022169a5e88
+	// The URI of _imageUri will generate the following Guid filename: 335a2bf2-ddaa-43a8-3c79-acb61472aab8
 	private readonly Uri _imageUri = new("https://ppdac.ltd/wp-content/uploads/2020/10/logo@2x-1.png");
-	private const string _deployedFileName = "11250d6b-4460-eda2-bfea-9022169a5e88";
+	private const string _deployedFileName = "335a2bf2-ddaa-43a8-3c79-acb61472aab8";
 	private readonly long expectedFilesize = new FileInfo(_deployedFileName).Length;
 
 	public ImageCache_GetAsStreamAsync_Should()

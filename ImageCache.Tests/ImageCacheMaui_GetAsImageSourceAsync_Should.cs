@@ -1,12 +1,12 @@
 ﻿namespace Ppdac.Cache.Maui.Tests;
 
 [TestClass]
-[DeploymentItem(@".\Deployables\11250d6b-4460-eda2-bfea-9022169a5e88")]
+[DeploymentItem(@".\Deployables\335a2bf2-ddaa-43a8-3c79-acb61472aab8")]
 public class ImageCacheMaui_GetAsImageSourceAsync_Should
 {
 	private readonly ImageCache _imageCache;
 	private readonly Uri _imageUri = new ("https://ppdac.ltd/wp-content/uploads/2020/10/logo@2x-1.png");
-	private const string _deployedFileName = "11250d6b-4460-eda2-bfea-9022169a5e88";
+	private const string _deployedFileName = "335a2bf2-ddaa-43a8-3c79-acb61472aab8";
 	readonly long expectedFilesize = new FileInfo(_deployedFileName).Length;
 
 	public ImageCacheMaui_GetAsImageSourceAsync_Should()

@@ -8,8 +8,9 @@ using System.Text;
 namespace Ppdac.Cache;
 
 /// <summary>
-/// Use this class to cache images from the Internet. Where ever you would give a control a URL, a stream, or byte[],
-/// as normal, but have ImageCache sit in the middle. For example, in .NET MAUI:
+/// Use this class to cache images from the Internet.
+/// Its functions receive a URI and turn the resource into an ImageSource, byte array, Stream, or Func‹Stream›.
+/// Where ever you would give a control a URL, a stream, or byte[], do so as normal, but have ImageCache sit in the middle. For example, in .NET MAUI:
 /// <code>
 /// // MauiProgram.cs:
 /// ...
@@ -23,11 +24,17 @@ namespace Ppdac.Cache;
 /// ...
 /// Page(ViewModel viewModel, ImageCache imageCache)
 /// {
-///		...
 ///		_imageCache = imageCache;
-///		_imageCache.Restore();
+///		foreach (Image image in viewModel.Images)
+///			Image.Source = _imageCache.GetImageAsImageSource(image.Url);
+///		
+///		Stream imageStream = await _imageCache.GetImageAsStreamAsync(image.Url);
+///		Bitmap bitmap = new(imageStream);
+///		
+///		byte[] imageBytes = await _imageCache.GetImageAsBytesAsync(image.Url);
 ///		...
 /// </code>
+/// See the demo project on the project's GitHub page for more examples.
 /// </summary>
 /// <permission cref="Ppdac.Cache">This class is public.</permission>
 public class ImageCache
@@ -48,7 +55,7 @@ public class ImageCache
 	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
 															  "ppdac.cache.imagecache");
 #endif
-	private static readonly HashAlgorithm s_sha256 = SHA256.Create();
+	private static readonly HashAlgorithm s_md5 = MD5.Create();
 	/// <summary>
 	/// Provides a quicker and more energy efficient lookup of the known (and thus cached) <see cref="Uri"/>s when compared to scanning the filesystem.
 	/// </summary>
@@ -229,14 +236,15 @@ public class ImageCache
 	/// </summary>
 	/// <param name="uri">The <see cref="Uri"/> whose filename to lookup.</param>
 	/// <returns>A <see cref="Guid"/> as a <see cref="string"/>.</returns>
+	// TODO: Even after switching to 16-byte hashes, is this a good solution? Probably not.
+	// Also, is a faster MD5 implementation really better than a slower collision-free hash?
 	protected internal static string GetFilename(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
-		lock (s_sha256)
+		lock (s_md5)
 		{
-			byte[] uriHash = s_sha256.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
-			ReadOnlySpan<byte> filenameSeed = new(uriHash[..16]);
-			Guid filename = new(filenameSeed);
+			byte[] uriHash = s_md5.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
+			Guid filename = new(uriHash);
 
 			return $"{filename}";
 		}
