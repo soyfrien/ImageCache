@@ -13,24 +13,56 @@ Because it is derived from the general-purpose `ImageCache` class, it can also b
 byte arrays or streams.
 
 # Usage
-Todo: learn the new GitHub usage thingy.
+Let's say you have an Image control that you currently pass a URL string into the `Source` property, instead of passing the string do something like:
+```...
+Source = await ImageCache.GetAsImageSourceAsync("https://www.example.com/image.png");
+// or ideally:
+Source = await ImageCache.GetAsImageSourceAsync(new Uri("https://www.example.com/image.png"));
+
+// Or use the ImageSource type directly:
+ImageSource imageSource = await ImageCache.GetAsImageSourceAsync(imageUri);
+Microsoft.Maui.Controls.Image mmcImage = new Microsoft.Maui.Controls.Image
+{
+	Source = imageSource
+};
+```
+
+It also works with controls that expect a byte array or stream, `System.Drawing.Image`, or the `Bitmap` class:
+```
+System.Drawing.Bitmap sdBitmap = new Bitmap(await _imageStore.GetAsStreamAsync(uri));
+
+// If you prefer synchronous methods:
+System.Drawing.Image sdImage = System.Drawing.Image.FromStream(_imageStore.GetAsStreamAsync(uri).Result);
+
+// Or just set up your byte array, and you can use these anywhere!
+byte[] imageBytes = await _imageStore.GetAsByteArrayAsync(uri);
+```
+
+As you can see, you are simply establishing a source for the image, but having a helper function sit right in the middle.
+
+## Advanced Usage
+You may only want to use it on certain pages. There are several ways to do this, including with dependcy injection, as well as changing the default cache folder to whatever you like: 
+```
+// Page A
+_imageCache.ImageCachePath = nameof(MyPage);
+
+// Page B
+_imageCacheB.ImageCachePath = nameof(MyOtherPage);
+```
+
+Though, DI is probably the best way to do this, injecting the class into the desired page.
+
 
 # Contibuting
 You are actively encouraged to report bugs and contribute to this repository.
 
 Contributions Are Appreciated and Welcome
 --------------------------------------------
-* If you want to improve this library:
-   - Please make a pull request to: https://github.com/ppdac/Ppdac.Cache.Maui/pulls
-* Contributions to this repository, any Fork, or copy remains with PPDAC LTD under the MIT license terms.
-* You may add a note to any significant code contributions you have made, but may not copyright or patent your changes.
-    * You may not modify licensing or copyright of any part or any derivative work (including a fork) of this software in any way without formal written consent.
+* If you want to improve this library please make a pull request to: https://github.com/soyfrien/ImageCache/pulls
 
 Bugs and Issues
 --------------------------------------------
-* Check the issue log in case your issue is already documented.
-* To make a Pull Request: https://github.com/ppdac/Ppdac.ImageCache.Maui/pulls
-* To report an issue: https://github.com/ppdac/Ppdac.ImageCache.Maui/issues
+* Please report any issues you find, old or new: https://github.com/soyfrien/ImageCache/issues
 
 License Awareness
 --------------------------------------------

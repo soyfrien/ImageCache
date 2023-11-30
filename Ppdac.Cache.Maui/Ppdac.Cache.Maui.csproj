@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-
-
 		<TargetFrameworks>
 			net7.0;
 			net7.0-android;
@@ -28,16 +26,19 @@
 		<Authors>Louis Waweru</Authors>
 		<Company>PPDAC, Ltd.</Company>
 		<Description>Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[], continue doing that as normal, but have ImageCache act as the intermediary. For example, instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).</Description>
-		<Copyright>©2023 Louis A. Waweru; PPDAC, Ltd.</Copyright>
-		<PackageProjectUrl>https://ppdac.ltd/ImageCache</PackageProjectUrl>
-		<PackageTags>cache; caching; image cache; maui;</PackageTags>
+		<Copyright>©2023 Louis Waweru; PPDAC, Ltd.</Copyright>
+		<PackageProjectUrl>https://github.com/soyfrien/ImageCache.git</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/soyfrien/ImageCache</RepositoryUrl>
+		<PackageTags>cache; caching; image cache; maui; local cache; mobile data plan friendly; data-saver; bandwidth reducer</PackageTags>
 		<PackageReleaseNotes>This version is for use in .NET MAUI. For other projects you may instead use: Ppdac.Cache.ImageCache.</PackageReleaseNotes>
+		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<PackageIcon>ppdac-square-logo.png</PackageIcon>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" PrivateAssets="compile;contentfiles;build;analyzers"/>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" PrivateAssets="compile;contentfiles;build;analyzers" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -45,11 +46,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="Icons\ppdac-square-logo.png">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	    <Pack>True</Pack>
-	    <PackagePath>\</PackagePath>
-	  </None>
+		<None Include="LICENSE.txt" Pack="true" PackagePath="" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="Icons\ppdac-square-logo.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>	  
 	</ItemGroup>
+
+	<PropertyGroup>
+		<PackageIcon>ppdac-square-logo.png</PackageIcon>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
 
 </Project>

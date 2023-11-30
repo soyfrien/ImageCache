@@ -1,8 +1,7 @@
 # ImageCache
 This library allows one to save bandwidth or API calls by caching images locally in a cache folder.
 
-For .NET MAUI apps, the location of this folder is decided by [FileSystem.CacheDirectory](https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.storage.filesystem.cachedirectory), 
-and for .NET 6.0 Windows apps, it is decided by [Environment.SpecialFolder.ApplicationData](https://docs.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=net-6.0#System_Environment_SpecialFolder_ApplicationData).
+For .NET MAUI apps, the location of this folder is decided by [FileSystem.CacheDirectory](https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.storage.filesystem.cachedirectory), and for .NET 6.0 Windows apps, it is decided by [Environment.SpecialFolder.ApplicationData](https://docs.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=net-6.0#System_Environment_SpecialFolder_ApplicationData).
 
 In place of the URI, use `GetAsImageSourceAsync(Uri uri)` instead, which will remember if this URI has been cached before, and if so, return the cached image source instead of downloading it again.
 
@@ -12,24 +11,56 @@ byte arrays or streams.
 For use with types that use an `ImageSource`, you can use the derived `ImageCache` class in [Ppdac.Cache.Maui](#) use `GetAsImageSourceAsync(Uri uri)` instead.
 
 # Usage
-Todo: learn the new GitHub usage thingy.
+Let's say you have an Image control that you currently pass a URL string into the `Source` property, instead of passing the string do something like:
+```...
+Source = await ImageCache.GetAsImageSourceAsync("https://www.example.com/image.png");
+// or ideally:
+Source = await ImageCache.GetAsImageSourceAsync(new Uri("https://www.example.com/image.png"));
+
+// Or use the ImageSource type directly:
+ImageSource imageSource = await ImageCache.GetAsImageSourceAsync(imageUri);
+Microsoft.Maui.Controls.Image mmcImage = new Microsoft.Maui.Controls.Image
+{
+	Source = imageSource
+};
+```
+
+It also works with controls that expect a byte array or stream, `System.Drawing.Image`, or the `Bitmap` class:
+```
+System.Drawing.Bitmap sdBitmap = new Bitmap(await _imageStore.GetAsStreamAsync(uri));
+
+// If you prefer synchronous methods:
+System.Drawing.Image sdImage = System.Drawing.Image.FromStream(_imageStore.GetAsStreamAsync(uri).Result);
+
+// Or just set up your byte array, and you can use these anywhere!
+byte[] imageBytes = await _imageStore.GetAsByteArrayAsync(uri);
+```
+
+As you can see, you are simply establishing a source for the image, but having a helper function sit right in the middle.
+
+## Advanced Usage
+You may only want to use it on certain pages. There are several ways to do this, including with dependcy injection, as well as changing the default cache folder to whatever you like: 
+```
+// Page A
+_imageCache.ImageCachePath = nameof(MyPage);
+
+// Page B
+_imageCacheB.ImageCachePath = nameof(MyOtherPage);
+```
+
+Though, DI is probably the best way to do this, injecting the class into the desired page.
+
 
 # Contibuting
 You are actively encouraged to report bugs and contribute to this repository.
 
 Contributions Are Appreciated and Welcome
 --------------------------------------------
-* If you want to improve this library:
-   - Please make a [pull request](https://dev.azure.com/ppdac/Ppdac.Cache/_git/ImageCache.Maui/pullrequests).
-* Contributions to this repository, any Fork, or copy remains with PPDAC LTD under the MIT license terms.
-* You may add a note to any significant code contributions you have made, but may not copyright or patent your changes.
-    * You may not modify licensing or copyright of any part or any derivative work (including a fork) of this software in any way without formal written consent.
-
+* If you want to improve this library please make a [pull request](https://dev.azure.com/ppdac/Ppdac.Cache/_git/ImageCache.Maui/pullrequests).
+* 
 Bugs and Issues
 --------------------------------------------
-* Check the issue log in case your issue is already documented.
-* To make a Pull Request: https://dev.azure.com/ppdac/Ppdac.Cache/_git/ImageCache.Maui/pullrequests
-* To report an issue: https://github.com/ppdac/Ppdac.ImageCache.Maui/issues
+* Please report any issues you find, old or new: https://github.com/soyfrien/ImageCache/issues
 
 License Awareness
 --------------------------------------------
