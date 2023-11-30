@@ -23,6 +23,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Ppdac.Cache.Maui.ImageCache</Title>
 		<PackageId>$(AssemblyName)</PackageId>
+		<Version>1.0.1</Version>
 		<Authors>Louis Waweru</Authors>
 		<Company>PPDAC, Ltd.</Company>
 		<Description>Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[], continue doing that as normal, but have ImageCache act as the intermediary. For example, instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).</Description>
@@ -37,6 +38,12 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<PackageIcon>ppdac-square-logo.png</PackageIcon>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Include="..\Ppdac.Cache\Icons\ppdac-square-logo.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" PrivateAssets="compile;contentfiles;build;analyzers" />
@@ -45,21 +52,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Ppdac.Cache\Ppdac.Cache.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="LICENSE.txt" Pack="true" PackagePath="" />
-		<None Include="README.md" Pack="true" PackagePath="\" />
-		<None Include="Icons\ppdac-square-logo.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>	  
-	</ItemGroup>
-
-	<PropertyGroup>
-		<PackageIcon>ppdac-square-logo.png</PackageIcon>
-		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	</PropertyGroup>
-
 </Project>
