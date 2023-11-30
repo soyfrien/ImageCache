@@ -28,7 +28,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Ppdac.Cache.ImageCache</Title>
 		<PackageId>$(AssemblyName)</PackageId>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<Authors>Louis Waweru</Authors>
 		<Company>PPDAC, Ltd.</Company>
 		<Description>Use this middleware to cache images from the Internet. Wherever you would give a control a URL, a stream, or byte[], continue doing that as normal, but have ImageCache act as the intermediary. For example: instead of ImageSource = Uri, do ImageSource = ImageCache(Uri).</Description>

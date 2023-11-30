@@ -39,6 +39,12 @@ namespace Ppdac.Cache;
 /// <permission cref="Ppdac.Cache">This class is public.</permission>
 public class ImageCache
 {
+	/// <summary>
+	/// The number of seconds after which to refetch a remote resource.
+	/// </summary>
+	/// <remarks>Defaults to twelve seconds.</remarks>
+	/// TODO: Make a test for expired cache files.
+	public int CacheExpiryInSeconds { get; set; } = 12;
 	// Release value for ImageCachePath when Microsoft.Maui.Storage is available: Path.Combine(FileSystem.Current.CacheDirectory, "ppdac");
 	// BenchmarkDotNet value: "C:\\Users\\Louis\\source\\repos\\ImageCache.Benchmarks\\bin\\Debug\\Images";
 	/// <summary>
@@ -52,7 +58,7 @@ public class ImageCache
 	public string ImageCachePath { get; set; } = Path.Combine(FileSystem.Current.CacheDirectory,
 															  "ppdac.cache.imagecache");
 #else
-	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+	public string ImageCachePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
 															  "ppdac.cache.imagecache");
 #endif
 	private static readonly HashAlgorithm s_md5 = MD5.Create();
@@ -64,6 +70,7 @@ public class ImageCache
 	/// It's of type <see cref="string"/> instead of <see cref="Uri"/> based on an unproven assumption that this will use slightly less memory.
 	/// For reasons like these it may be removed in a future version.</remarks>
 	protected static readonly List<string> s_cachedUris = new(); //[];
+
 
 
 	/// <summary>
@@ -159,7 +166,7 @@ public class ImageCache
 
 
 	/// <summary>
-	/// See <see cref="GetImageAsBytesAsync(Uri)"/>.
+	/// See <see cref="GetAsBytesAsync(Uri)"/>.
 	/// </summary>
 	/// <param name="url">The string URL</param>
 	/// <returns>A byte array.</returns>
@@ -238,7 +245,7 @@ public class ImageCache
 	/// <returns>A <see cref="Guid"/> as a <see cref="string"/>.</returns>
 	// TODO: Even after switching to 16-byte hashes, is this a good solution? Probably not.
 	// Also, is a faster MD5 implementation really better than a slower collision-free hash?
-	protected internal static string GetFilename(Uri uri)
+	protected internal string GetFilename(Uri uri)
 	{
 		ArgumentNullException.ThrowIfNull(uri);
 		lock (s_md5)
@@ -246,8 +253,26 @@ public class ImageCache
 			byte[] uriHash = s_md5.ComputeHash(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 			Guid filename = new(uriHash);
 
+			if (CachedFileExpired($"{ImageCachePath}\\{filename}") is true)
+				File.Delete($"{ImageCachePath}\\{filename}");
+
 			return $"{filename}";
 		}
+	}
+
+
+	/// <summary>
+	/// Checks the date of the cached file and returns true if it's older than the specified time.
+	/// </summary>
+	/// <param name="filename">The filename of the cached file.</param>
+	/// <returns>True if the file is older than the specified time.</returns>
+	internal bool CachedFileExpired(string filename)
+	{
+		TimeSpan timeSinceLastWrite = DateTime.Now - File.GetLastWriteTime(filename);
+		if (timeSinceLastWrite.TotalSeconds > CacheExpiryInSeconds)
+			return true;
+		else
+			return false;
 	}
 
 
@@ -294,10 +319,8 @@ public class ImageCache
 	/// <returns>A string from a TResult.</returns>
 	public Task<string> Purge()
 	{
-
 		if (Directory.Exists(ImageCachePath) is false)
 			return Task.FromResult($"{ImageCachePath} wasn't there.");
-
 
 		if (Directory.GetFiles(ImageCachePath).ToList().Count > 0)
 			foreach (string file in Directory.GetFiles(ImageCachePath).ToList())
